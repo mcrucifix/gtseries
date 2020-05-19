@@ -1,0 +1,10 @@
+Package: gtseries
+Type: Package
+Title: Time Series analysis for galcial cycles
+Version: 1.03
+Date: 2015-02-12
+Author: Michel Crucifix
+Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+LazyLoad: yes
