@@ -8,11 +8,12 @@
 #----------------------------------------------------------------------   
 # using astronomical forcing as sample data
 
-ssa <- function(X=X,N=length(X),M=M)
+ssa <- function(X=X,N=length(X),M=M,Nrec=10)
 {
 
   # construct  Toeplitz Matrix for reference signal (eq. 6)
   # according to Vautard and Ghil, 1989
+  # added: Nrec : number of components of reconstruction
 
   X <- X - mean(X)
   cij <- vector("double",M)
@@ -38,11 +39,11 @@ ssa <- function(X=X,N=length(X),M=M)
 
   # evaluation of the principal components of the original signal (eq. 10)
    
-  A <- matrix(0,N-M+1,10)
+  A <- matrix(0,N-M+1,Nrec)
 
 
 
-   for (k in 1:10) { for (t in 1:(N-M+1))
+   for (k in 1:Nrec) { for (t in 1:(N-M+1))
      A[t,k] <- crossprod(X[t:(t+M-1)],rhok[,k])
    }
 
@@ -68,16 +69,16 @@ ssa <- function(X=X,N=length(X),M=M)
     Lt[t]<-t-N+M
     Ut[t]<-M}
 
-  PCA <- matrix(0,10,N);
+  PCA <- matrix(0,Nrec,N);
 
 
-  for (t in 1:N) {for (k in 1:10)
+  for (t in 1:N) {for (k in 1:Nrec)
    {
    PCA[k,t] <- PCA[k,t] + crossprod(A[t-Lt[t]:Ut[t]+1,k],rhok[Lt[t]:Ut[t],k]);
   }}
 
-  LA <- vector("double",10)
-  for (k in 1:10) {
+  LA <- vector("double",Nrec)
+  for (k in 1:Nrec) {
    PCA[k,] <- PCA[k,]/Mt
    LA[k]=crossprod(PCA[k,],X[1:N])
   }
@@ -91,7 +92,7 @@ ssa <- function(X=X,N=length(X),M=M)
 
 plot.SSAObject <- function (SSAObject,...)
 {
-  yat <- outer(seq(1:10),10^(seq(-3,5)),"*")
+  yat <- outer(seq(1:Nrec),10^(seq(-3,5)),"*")
   ylab <- 10^(-2:5)
 
    ss <- lapply(seq(along = ylab),
