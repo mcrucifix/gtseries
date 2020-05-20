@@ -1,3 +1,29 @@
+\name{ssa}
+\alias{ssa}
+\title{Singar Spectrum Analysis}
+\description{
+  Singular spectrum analysis based on Ghil et al. 2002}
+
+\usage{
+ (X = X, N = length(X), M = M, Nrec = 10)
+}
+\arguments{
+  \item{X}{numeric vector}
+  \item{N}{number of points to be considered in the vector}
+  \item{M}{window length}
+  \item{Nrec}{number of components to keep for the reconstruction}
+}
+\details{}
+\value{
+  an \code{SSAObject} 
+}
+\author{Michel Crucifix}
+\references{
+Yiou P., E. Baert and M. F. Loutre (1996), Spectral analysis of climate data, Surveys in Geophysics, (17) 619-663 doi:10.1007/BF01931784
+
+Ghil M., M. R. Allen, M. D. Dettinger, K. Ide, D. Kondrashov, M. E. Mann, A. W. Robertson, A. Saunders, Y. Tian, F. Varadi and P. Yiou (2002), Advanced spectral methods for climatic time series, Reviews of Geophysics, (40) 769-794 doi:10.1029/2000RG000092
+}
+
 \examples{
 require (gtseries)
 
