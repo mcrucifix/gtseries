@@ -192,13 +192,14 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
     wave
 }
 
-plot.wavelet <- function (wave,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,...)
+plot.wavelet <- function (wave,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,plotMask=TRUE,...)
 
 {
   require(fields)
   xx <- attr(wave,"time")
   period <- attr(wave,"period")
   mask <- attr(wave,"mask")
+  if (!plotMask) mask[,] = 1  # do not hide influence cone
   aa <- attr(wave,"scale")
   thin_factor_xx <- max(ceiling(length(xx)/ resx),1)
   thin_factor_yy <- max(ceiling(length(aa)/ resy),1)
