@@ -1,0 +1,14 @@
+extern void nrerror(char *error_text);
+extern float Square(float x);
+extern double *dvector(int nl, int nh);
+extern double **dmatrix(int nrl, int nrh, int ncl, int nch);
+extern float **matrix(int nrl, int nrh, int ncl, int nch);
+extern float *vector(int nl, int nh);
+extern int *ivector(int nl, int nh);
+extern long *lvector(int nl, int nh);
+extern void free_dvector(double *v, int nl, int nh);
+extern void free_dmatrix(double **m, int nrl, int nrh, int ncl, int nch);
+extern void free_vector(float *v, int nl, int nh);
+extern void free_ivector(int *v, int nl, int nh);
+extern void free_lvector(long *v, int nl, int nh);
+extern void free_matrix(float **m, int nrl, int nrh, int ncl, int nch);
