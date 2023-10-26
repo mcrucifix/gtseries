@@ -18,7 +18,7 @@
 #' @param X the input series (typically a numeric)
 #' @param N if provided,  the length of the input series to beconsiderd 
 #' @param M the length of the sliding window
-#' @param Nrec: number of components to be output
+#' @param Nrec number of components to be output
 #' @importFrom sfsmisc axTexpr
 #' @importFrom sfsmisc eaxis
 
@@ -157,9 +157,9 @@ ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
 
 #' @rdname ssa
 #' @export
-plot.SSAObject <- function (SSAObject,...)
+plot.SSAObject <- function (x,...)
 {
-  Nrec = length(SSAAbject$LA)
+  Nrec = length(x$LA)
   yat <- outer(seq(1:Nrec),10^(seq(-3,5)),"*")
   ylab <- 10^(-2:5)
 
@@ -168,7 +168,7 @@ plot.SSAObject <- function (SSAObject,...)
                        substitute(10^E, list(E=log10(ylab[i]))))
 
    S <- do.call("expression",ss)
-  plot(SSAObject$lambda,frame=T,axes=F,log="y",xlab="rank",ylab="Eigenvalue",...)
+  plot(x$lambda,frame=T,axes=F,log="y",xlab="rank",ylab="Eigenvalue",...)
   axis(1,xlab="rank")
   axis(2,at=yat,ylab="Eigenvalue",labels=F)
   axis(2,at=ylab,labels=axTexpr(1,at=ylab),tick=F,las=1)

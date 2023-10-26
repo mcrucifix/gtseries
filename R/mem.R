@@ -39,10 +39,10 @@ mem <- function (A,method='burg',order.max=90,...) {
 
 #' @rdname mem
 #' @export
-plot.memObject <- function (memObject,period=FALSE,xaxp=NULL,yaxp=NULL,...)
+plot.memObject <- function (x,period=FALSE,xaxp=NULL,yaxp=NULL,...)
 {
 
-  plot(memObject$frequency,memObject$power,
+  plot(x$frequency,x$power,
        frame=FALSE,axes=FALSE,log="xy",type="l",xlab="",ylab="Power density",...)
   local({
   if (is.null(yaxp)) {yaxp <- par("yaxp"); yaxp[3] <- 1; par(yaxp=yaxp)}

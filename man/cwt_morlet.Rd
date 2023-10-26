@@ -18,7 +18,7 @@ cwt_morlet(
 )
 
 \method{plot}{wavelet}(
-  wave,
+  x,
   resx = 400,
   resy = 300,
   xlab = "Time",

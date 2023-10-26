@@ -18,6 +18,8 @@
 ## Wavelets : theory and applications, Erlenbacher et al. eds, Oxford University Press 1996
 
 
+
+
 col_wavelet <- colorRampPalette(c('darkblue','lightblue','grey','white','red'))(100)
 
 search_ridge <- function (A,first_guess,k0=5.6,tol=1e-6, itmax=20,B=seq(along=A),window=c(0,Inf))
@@ -120,8 +122,8 @@ cross_morlet <- function(A, B, ...)
 
 #' Continous Morlet Wavelet Transform 
 
-#' @importFrom stats fft
-#' @importFrom stats time
+#' @importFrom stats fft deltat lm qnorm toeplitz ts time
+#' @importFrom graphics axis image lines par text
 #' @export cwt_morlet
 cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA,deriv=FALSE)
 {
@@ -200,20 +202,20 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
 
 #' @rdname cwt_morlet
 #' @export
-plot.wavelet <- function (wave,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,plotMask=TRUE,...)
+plot.wavelet <- function (x,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,plotMask=TRUE,...)
 
 {
   require(fields)
-  xx <- attr(wave,"time")
-  period <- attr(wave,"period")
-  mask <- attr(wave,"mask")
+  xx <- attr(x,"time")
+  period <- attr(x,"period")
+  mask <- attr(x,"mask")
   if (!plotMask) mask[,] = 1  # do not hide influence cone
-  aa <- attr(wave,"scale")
+  aa <- attr(x,"scale")
   thin_factor_xx <- max(ceiling(length(xx)/ resx),1)
   thin_factor_yy <- max(ceiling(length(aa)/ resy),1)
   subx <- seq(thin_factor_xx,length(xx),thin_factor_xx)
   suba <- seq(thin_factor_yy,length(aa),thin_factor_yy)
-  wave_scaled <- Mode(wave[subx,suba])*mask[subx,suba]
+  wave_scaled <- Mode(x[subx,suba])*mask[subx,suba]
   for (i in 1:length(suba)) wave_scaled[,i] <- wave_scaled[,i]/(aa[i]^scaling_correction)
   if (legend) par(oma=c(2,2,2,5))
   image(xx[subx],period[suba],wave_scaled,log="y",ylab=ylab,xlab=xlab,axes=FALSE,col=col,...)

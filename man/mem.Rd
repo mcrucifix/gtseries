@@ -7,7 +7,7 @@
 \usage{
 mem(A, method = "burg", order.max = 90, ...)
 
-\method{plot}{memObject}(memObject, period = FALSE, xaxp = NULL, yaxp = NULL, ...)
+\method{plot}{memObject}(x, period = FALSE, xaxp = NULL, yaxp = NULL, ...)
 }
 \arguments{
 \item{A}{input, a time-series object}

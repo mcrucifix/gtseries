@@ -7,7 +7,7 @@
 \usage{
 ssa(X = X, N = length(X), M = M, Nrec = 10)
 
-\method{plot}{SSAObject}(SSAObject, ...)
+\method{plot}{SSAObject}(x, ...)
 }
 \arguments{
 \item{X}{the input series (typically a numeric)}
@@ -16,7 +16,7 @@ ssa(X = X, N = length(X), M = M, Nrec = 10)
 
 \item{M}{the length of the sliding window}
 
-\item{Nrec:}{number of components to be output}
+\item{Nrec}{number of components to be output}
 }
 \value{
 a SSA object, compatible with the supplied plot function
