@@ -2,10 +2,30 @@
 % Please edit documentation in R/mem.R
 \name{mem}
 \alias{mem}
+\alias{plot.memObject}
 \title{Maximum entropy method}
 \usage{
 mem(A, method = "burg", order.max = 90, ...)
+
+\method{plot}{memObject}(memObject, period = FALSE, xaxp = NULL, yaxp = NULL, ...)
+}
+\arguments{
+\item{A}{input, a time-series object}
+
+\item{method}{Estimation method, passed to the standard `ar` function, which is one of "yule-walker", "burg", "ols", "mle", "yw". Defaults to "burg".}
+
+\item{order.max}{maximum order of the autoregressive model being fitted}
+}
+\value{
+a memObject
 }
 \description{
-Maximum entropy method
+Maximum entropy spectral analysis (MESA) is the statistical estimation of the power spectrum of a stationary time series using the maximum entropy (ME) method. The resulting ME spectral estimator is parametric and equivalent to an autoregressive (AR) spectral estimator (copied from  \\insertCite{pardo-iguzquiza21aa}{gtseries}). The method relies heavily on the standard-R `ar` function, of which it is essentially a wrapper associated with a plot class function (authors: Martyn Plummer. C code for  `ar.burg` by B. D. Ripley.)
+}
+\references{
+\insertRef{Burg75aa}{gtseries}
+\insertRef{percival98}{gtseries}
+\insertRef{Ghil02aa}{gtseries}
+\insertRef{pardoiguzquiza06aa}{gtseries}
+\insertRef{pardo-iguzquiza21aa}{gtseries}
 }

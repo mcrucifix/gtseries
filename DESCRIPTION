@@ -1,6 +1,6 @@
 Package: gtseries
 Type: Package
-Title: Time Series analysis for galcial cycles
+Title: Time Series analysis for paleoclimate and cyclostrat purposes
 Version: 1.04
 Date: 2022-05-28
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
@@ -9,5 +9,5 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyLoad: yes
 RoxygenNote: 7.2.3
-Imports: Rdpack
+Imports: Rdpack, sfsmisc
 RdMacros: Rdpack

@@ -19,6 +19,9 @@
 #' @param N if provided,  the length of the input series to beconsiderd 
 #' @param M the length of the sliding window
 #' @param Nrec: number of components to be output
+#' @importFrom sfsmisc axTexpr
+#' @importFrom sfsmisc eaxis
+
 #' @references
 #' \insertRef{Ghil02aa}{gtseries}
 #' \insertRef{VAUTARD89aa}{gtseries}
@@ -156,6 +159,7 @@ ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
 #' @export
 plot.SSAObject <- function (SSAObject,...)
 {
+  Nrec = length(SSAAbject$LA)
   yat <- outer(seq(1:Nrec),10^(seq(-3,5)),"*")
   ylab <- 10^(-2:5)
 

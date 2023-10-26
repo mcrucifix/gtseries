@@ -1,15 +1,28 @@
 /* NRUTIL: from "Numerical Recipes in C", pp. 705-709 */
+/* released in "public domain" whatever it means */
+/* modified by introducing R.h headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 
+#include <R.h>
+// Note: This loads R_ext/Print.h that we need
+
+// Define strict headers
+#define STRICT_R_HEADERS
+// Map printf to Rprintf
+#define printf Rprintf
+#define printerr REprintf
+
+
+
 /* nrerror() := Numerical Recipes standard error handler */
 void nrerror(char *error_text)
 {
-	fprintf(stderr, "Numerical Recipes run-time error...\n");
-	fprintf(stderr, "%s\n", error_text);
-	fprintf(stderr, "...now exiting to system...\n");
-	exit(1);
+	printerr("C-code run-time error...\n");
+	printerr("%s\n", error_text);
+	printerr("...now exiting to system...\n");
+/*  exit(1);*/
 }
 
 /* *vector() := Allocates a float vector with range [nl..nh] */

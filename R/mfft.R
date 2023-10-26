@@ -11,6 +11,8 @@
 #' estimates the frequencies (f_j), amplitudes (A_j) and phases 
 #' (psi_j) in its decomposition. 
 #' @useDynLib gtseries
+#' @importFrom stats start
+#' @importFrom stats as.ts
 #' @param xdata The data provided either as a time series (advised), or as a vector. 
 #' may be complex
 #' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note this are
@@ -25,7 +27,6 @@
 #' The computed frequencies are in the range given by minfreq and maxfreq.
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
 #' @return STILL NEED TO BE DESCRIBED
-#' @references
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 #' actual computations
 #' \insertRef{sidlichovsky97aa}{gtseries}
@@ -34,11 +35,11 @@
 mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30)
 {
 
-  xdata = as.ts(xdata)
+  xdata = stats::as.ts(xdata)
   dt = deltat(xdata)
      print('deltat')
      print(dt)
-  startx = start(xdata) 
+  startx = stats::start(xdata) 
   ydata = Im(xdata)
   xdata = Re(xdata)
   ndata = length(xdata);

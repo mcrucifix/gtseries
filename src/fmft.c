@@ -17,6 +17,15 @@ X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */
 /*#define N2FLAG */
 /*#define N2FLAG2*/
 
+#include <R.h>
+// Note: This loads R_ext/Print.h that we need
+
+// Define strict headers
+#define STRICT_R_HEADERS
+// Map printf to Rprintf
+#define printf Rprintf
+#define printe Reprintf
+
 #define FMFT_TOL 1.0e-10 /* MFT NOMINAL PRECISION */
 #define FMFT_NEAR 0.     /* MFT OVERLAP EXCLUSION PARAMETER */
 

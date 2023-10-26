@@ -120,11 +120,13 @@ cross_morlet <- function(A, B, ...)
 
 #' Continous Morlet Wavelet Transform 
 
+#' @importFrom stats fft
+#' @importFrom stats time
 #' @export cwt_morlet
 cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA,deriv=FALSE)
 {
    y <- A
-   xx <- time(A)
+   xx <- stats::time(A)
    deltat<-deltat(A)
    ny<-length(y);
 
@@ -160,7 +162,7 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
 
   k<-(0:(n-1))*2*pi/n
 
-  f<-fft(x);
+  f<-stats::fft(x);
 
   J<-length(scale);
 
@@ -175,8 +177,8 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
  ##   norm=sqrt(scale[a1]*k[2])*(pi^(-0.25))/sqrt(nn); 
     norm=2; 
     daughter=norm*exp(expnt);
-    wave[,a1]=fft(f*daughter ,inverse=TRUE)/n
-    if (deriv) dwave[,a1]=fft(f*daughter*(-(1i*k)) ,inverse=TRUE)/n;
+    wave[,a1]=stats::fft(f*daughter ,inverse=TRUE)/n
+    if (deriv) dwave[,a1]=stats::fft(f*daughter*(-(1i*k)) ,inverse=TRUE)/n;
     if (calcmask) {
       mask[1:min(n,ceiling(sqrt(2)*scale[a1])),a1] = NA;
       mask[(n-min(n,ceiling(sqrt(2)*scale[a1]))):n,a1] = NA;

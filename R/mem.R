@@ -1,15 +1,28 @@
-
 #' Maximum entropy method 
-
-#' @export mem
-mem <- function (A,method='burg',order.max=90,...)
-{
+#'
+#' Maximum entropy spectral analysis (MESA) is the statistical estimation of the power spectrum of a stationary time series using the maximum entropy (ME) method. The resulting ME spectral estimator is parametric and equivalent to an autoregressive (AR) spectral estimator (copied from  \\insertCite{pardo-iguzquiza21aa}{gtseries}). The method relies heavily on the standard-R `ar` function, of which it is essentially a wrapper associated with a plot class function (authors: Martyn Plummer. C code for  `ar.burg` by B. D. Ripley.)
+#'
+#' @param A input, a time-series object
+#' @param method Estimation method, passed to the standard `ar` function, which is one of "yule-walker", "burg", "ols", "mle", "yw". Defaults to "burg".
+#' @param order.max maximum order of the autoregressive model being fitted
+#' @return  a memObject
+#' @references
+#' \insertRef{Burg75aa}{gtseries}
+#' \insertRef{percival98}{gtseries}
+#' \insertRef{Ghil02aa}{gtseries}
+#' \insertRef{pardoiguzquiza06aa}{gtseries}
+#' \insertRef{pardo-iguzquiza21aa}{gtseries}
+#' @importFrom graphics mtext
+#' @importFrom stats ar
+#' @importFrom stats coef
+#' @export  mem
+mem <- function (A,method='burg',order.max=90,...) {
   deltat<-deltat(A)
   minf  <- 2./length(A)
 
   f <- 10^(seq(log10(minf),log10(0.5),length.out=400))
 
-  U <- ar(A,method=method,order.max=order.max,...)
+  U <- stats::ar(A,method=method,order.max=order.max,...)
 
   ##  v.maice multiplied by deltat to have power density (I still need to really undersant
   ##    why, but this works)
@@ -24,6 +37,8 @@ mem <- function (A,method='burg',order.max=90,...)
 }
 
 
+#' @rdname mem
+#' @export
 plot.memObject <- function (memObject,period=FALSE,xaxp=NULL,yaxp=NULL,...)
 {
 
@@ -56,7 +71,7 @@ axis.log10 <- function(side=1,title="Power",factor=1,line=3,outer.at=TRUE,small.
          small_ticks <- small_ticks[which(small_ticks > range[1] & small_ticks < range[2])]
          axis(side,at=small_ticks^factor,labels=FALSE,tcl=3/5*par("tcl"),...)
          }
-   mtext(title,side=side,line=3,cex=par("cex.lab")*par("cex"))
+   graphics::mtext(title,side=side,line=3,cex=par("cex.lab")*par("cex"))
 }
 
 add.intercept <- function (memObject, xlim = range(memObject$frequency)[2]*c(5.e-2,0.5),annote=TRUE)
@@ -67,7 +82,7 @@ print(range(memObject$frequency)[2])
 t <- which (frequency > xlim[1] & frequency < xlim[2])
 
 fm1 <- lm(log10(power) ~ log10(frequency),as.data.frame(memObject[t,]))
-lines(xlim,10^(coef(fm1)[1]+log10(xlim)*coef(fm1)[2]),lty=2)
+lines(xlim,10^(stats::coef(fm1)[1]+log10(xlim)*stats::coef(fm1)[2]),lty=2)
 #print(xlim)
 #print(10^(coef(fm1)[1]+log10(xlim)*coef(fm1)[2]))
 if (annote) {
