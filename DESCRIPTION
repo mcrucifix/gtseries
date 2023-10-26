@@ -1,8 +1,8 @@
 Package: gtseries
 Type: Package
 Title: Time Series analysis for paleoclimate and cyclostrat purposes
-Version: 1.04
-Date: 2022-05-28
+Version: 1.05-pre
+Date: 2023-26-10
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
 Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: More about what it does (maybe more than one line)
