@@ -6,9 +6,21 @@ estimates the frequencies (f_j), amplitudes (A_j) and phases
 
 X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */      
 
+/* adapted from https://www.boulder.swri.edu/~davidn/fmft/fmft.html */
+/* most of the code has been authored by David Nesvornky and released on the above website */
+/* adaptations by Michel Crucifix (2023) for
+ * - avoid references to Numerical Recipies: replace Fourier transform and sorting by corresponding gsl routines
+ * - generalise to data length not a power of 2
+ * - technical adaptations for compatibility with R */
+
+/* left overs of development phase */
+/*#define N2FLAG */
+/*#define N2FLAG2*/
+
 #define FMFT_TOL 1.0e-10 /* MFT NOMINAL PRECISION */
 #define FMFT_NEAR 0.     /* MFT OVERLAP EXCLUSION PARAMETER */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -22,20 +34,28 @@ X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */
 #define TWOPI (2.*PI)
 
 
-static int itemp;
-static unsigned long ultemp;
 static float ftemp;
 static double dtemp;
 
-#define FSQR(a) ((ftemp=(a)) == 0.0 ? 0.0 : ftemp*ftemp)
 #define DSQR(a) ((dtemp=(a)) == 0.0 ? 0.0 : dtemp*dtemp)
-
 #define SHFT3(a,b,c) (a)=(b);(b)=(c)
 #define SHFT4(a,b,c,d) (a)=(b);(b)=(c);(c)=(d)
 
-#define ISWAP(a,b) itemp=(a);(a)=(b);(b)=itemp
-#define ULSWAP(a,b) ultemp=(a);(a)=(b);(b)=ultemp
-#define FSWAP(a,b) ftemp=(a);(a)=(b);(b)=ftemp
+bool fastflag;
+
+bool isPowerofTwo (size_t n){
+  if (n == 0)
+    return 0;
+  while (n != 1){
+    if (n % 2 != 0)
+      return (0);
+    n = n/2;
+  }
+  return 1;
+}
+
+
+
 
 void window(double *x, double *y, double *xdata, double *ydata, size_t ndata);
 
@@ -68,6 +88,7 @@ void dindex(unsigned long n, double arr[], unsigned long indx[]);
     double phase;
   };
  
+
 
 int fmft(int *localnfreq, double *localminfreq, double *localmaxfreq, int *localflag, 
 	 int *localndata, double *localxdata, double *localydata,  
@@ -124,10 +145,19 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
   int flag = *localflag;
   size_t ndata = *localndata;
 
+
+  fastflag = isPowerofTwo(ndata) ;
+
+  if (fastflag)
+    (printf("ndata is power of two: we will be faster ! \n"));
+  if (ndata <= 2){
+    printf("at least 2 data needed - output non-reliable"); return(0);
+  }
+  if (ndata <= nfreq){
+    printf("nfreq must be smaller than nata"); return(0);
+  }
+
 /*  printf("prelimarg %d, %zu %d", nfreq, ndata, flag);*/
-  printf("prelimarg %d, %d %d", nfreq, *localndata, *localflag);
-  printf("xdata: %.2f, %.2f, %.2f", localxdata[0],localxdata[1],localxdata[2]);
-  printf("ydata: %.2f, %.2f, %.2f", localydata[0],localydata[1],localydata[2]);
 
   /* ALLOCATION OF VARIABLES */
 
@@ -502,11 +532,33 @@ CALLS FFT AND RETURNS POWER SPECTRAL DENSITY */
     z[2*j-1] = y[j];
   }
  
-  gsl_fft_complex_radix2_backward (z,1,ndata);
- 
-  for(j=1;j<=ndata;j++)
-    powsd[j] = FSQR(z[2*j-2]) + FSQR(z[2*j-1]);
+// #ifdef N2FLAG2
 
+if (fastflag){
+
+  gsl_fft_complex_radix2_backward (z,1,ndata);
+
+} else {
+
+  gsl_fft_complex_wavetable * wavetable;
+  gsl_fft_complex_workspace * workspace;
+
+  wavetable = gsl_fft_complex_wavetable_alloc (ndata);
+  workspace = gsl_fft_complex_workspace_alloc (ndata);
+
+
+  gsl_fft_complex_backward (z, 1, ndata,
+                           wavetable, workspace);
+  gsl_fft_complex_wavetable_free (wavetable);
+  gsl_fft_complex_workspace_free (workspace);
+
+}
+
+  for(j=1;j<=ndata;j++)
+    powsd[j] = DSQR(z[2*j-2]) + DSQR(z[2*j-1]);
+
+
+/*  return(0);*/
 }
 
 double bracket(float *powsd, size_t ndata)
@@ -541,14 +593,14 @@ double bracket(float *powsd, size_t ndata)
       maxpow = powsd[1];
     }
 
-  if(maxpow == 0) nrerror("DFT has no maximum ...");
+  if(maxpow == 0) printf("DFT has no maximum ...");
 
-  if(maxj < ndata/2) freq = -(maxj-1);  
-  if(maxj > ndata/2) freq = -(maxj-ndata-1);
+  if(maxj < ndata/2 - 1) freq = -(maxj-1);  
+  if(maxj > ndata/2 - 1) freq = -(maxj-ndata-1);
 
   return (TWOPI*freq / ndata);
 
-  /* negative signs and TWOPI compensate for the Numerical Recipes 
+  /* negative signs and TWOPI compensate for the 
      definition of the DFT */
 }
     
@@ -622,13 +674,16 @@ double phisqr(double freq, double xdata[], double ydata[], size_t ndata)
 }
 
 void phifun(double *xphi, double *yphi, double freq,  
-	      double xdata[], double ydata[], long n)
+	      double xdata[], double ydata[], long n){
 
      /* COMPUTES THE FUNCTION PHI */   
+     /* THIS REQUIRES DATA LENGTH TO BE 2^N */
+     /* BECAUSE IT PERFORMS A DYADIC DECOMPOSITION */
 
-{
-  long i, j, nn;
-  double c, s, *xdata2, *ydata2;
+  long i;
+  double c, s;
+
+  double *xdata2, *ydata2;
   
   xdata2 = dvector(1, n);
   ydata2 = dvector(1, n);
@@ -641,6 +696,12 @@ void phifun(double *xphi, double *yphi, double freq,
     ydata2[i] = ydata[i];
   }
 
+
+/*#ifdef N2FLAG*/
+
+if (fastflag) {
+
+  long j, nn;
   nn = n;
 
   while(nn != 1){
@@ -657,12 +718,33 @@ void phifun(double *xphi, double *yphi, double freq,
     }
 
   }
-  
+ 
   *xphi = 2*xdata2[1] / (n-1);
   *yphi = 2*ydata2[1] / (n-1);
 
-  free_dvector(xdata2,1,n);
-  free_dvector(ydata2,1,n);
+
+
+} else {
+
+/*xdata2[1] = xdata[1] ; ydata2[1] = ydata[1] ;*/
+/*xdata2[n] = xdata[n] ; ydata2[n] = ydata[n] ;*/
+
+ *xphi = 0;
+ *yphi = 0;
+
+ for(i=1;i<=n;i++){
+    
+    c = 2*cos(-(i-1)*freq)/(n-1);
+    s = 2*sin(-(i-1)*freq)/(n-1);
+   
+      *xphi += c*xdata2[i] - s*ydata2[i];
+      *yphi += c*ydata2[i] + s*xdata2[i];
+    }
+
+}
+
+free_dvector(xdata2,1,n);
+free_dvector(ydata2,1,n);
 
 }
 

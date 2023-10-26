@@ -17,6 +17,7 @@
 ## Tchawitchia P., Wavelets, functions and operators, ch. 3 in 
 ## Wavelets : theory and applications, Erlenbacher et al. eds, Oxford University Press 1996
 
+
 col_wavelet <- colorRampPalette(c('darkblue','lightblue','grey','white','red'))(100)
 
 search_ridge <- function (A,first_guess,k0=5.6,tol=1e-6, itmax=20,B=seq(along=A),window=c(0,Inf))
@@ -117,6 +118,9 @@ cross_morlet <- function(A, B, ...)
   (CA * Conj(CB)) / (Mod(CA) * Mod(CB) )
 }
 
+#' Continous Morlet Wavelet Transform 
+
+#' @export cwt_morlet
 cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA,deriv=FALSE)
 {
    y <- A
@@ -192,6 +196,8 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
     wave
 }
 
+#' @rdname cwt_morlet
+#' @export
 plot.wavelet <- function (wave,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,plotMask=TRUE,...)
 
 {
@@ -216,7 +222,8 @@ plot.wavelet <- function (wave,resx=400,resy=300,xlab="Time",ylab="Period",scali
   par(oma=c(2,2,2,5))}
 }
 
-
+#' @rdname cwt_morlet
+#' @export
 powerspectrum.wavelet <- function (wave,...)
 {
   aa <- attr(wave,"scale")

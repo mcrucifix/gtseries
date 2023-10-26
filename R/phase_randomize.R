@@ -1,5 +1,12 @@
-## randomize the phases of a real signal, for non-linear time series analysis
-
+#' Phase Randomizer
+#'
+#' randomizes the phases of a real signal, for non-linear time series analysis
+#' It works by computing the FFT of the signal, then randomize the phases of all
+#' complex numbers, but preserving the complex conjugate relationship guarantee
+#' that the inverse transform will be real
+#' @param  x the input time series
+#' @return x the output time series. 
+#'
 phase_randomize <- function (x)
 {
 N <- length(x)

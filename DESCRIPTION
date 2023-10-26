@@ -8,3 +8,6 @@ Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyLoad: yes
+RoxygenNote: 7.2.3
+Imports: Rdpack
+RdMacros: Rdpack

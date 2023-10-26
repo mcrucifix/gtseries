@@ -1,3 +1,7 @@
+
+#' Maximum entropy method 
+
+#' @export mem
 mem <- function (A,method='burg',order.max=90,...)
 {
   deltat<-deltat(A)
