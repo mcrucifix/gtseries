@@ -56,41 +56,41 @@ static double dtemp;
 
 bool fastflag;
 
-bool isPowerofTwo (size_t n){
-  if (n == 0)
-    return 0;
-  while (n != 1){
-    if (n % 2 != 0)
-      return (0);
-    n = n/2;
-  }
-  return 1;
-}
+/*bool isPowerofTwo (size_t n){*/
+/*  if (n == 0)*/
+/*    return 0;*/
+/*  while (n != 1){*/
+/*    if (n % 2 != 0)*/
+/*      return (0);*/
+/*    n = n/2;*/
+/*  }*/
+/*  return 1;*/
+/*}*/
 
 
 
 
-void window(double *x, double *y, double *xdata, double *ydata, size_t ndata);
+void window_real(double *x, double *xdata, size_t ndata);
 
-void power(float *powsd, double *x, double *y, size_t ndata);
+void power_real(float *powsd, double *x, size_t ndata);
 
-double bracket(float *powsd, size_t ndata);
+double bracket_real(float *powsd, size_t ndata);
 
-double golden(double (*f)(double, double *, double *, size_t), 
+double golden_real(double (*f)(double, double *, size_t), 
 	      double leftf, double centerf, double rightf, 
-	      double *x, double *y, size_t ndata);
+	      double *x, size_t ndata);
 
-void phifun(double *xphi, double *yphi, double freq,  
-	      double xdata[], double ydata[], long n);
+void phifun_real(double *xphi, double *yphi, double freq,  
+	      double xdata[], long n);
 
-double phisqr(double freq, double xdata[], double ydata[], size_t ndata);
+double phisqr_real(double freq, double xdata[], size_t ndata);
 
-void amph(double *amp, double *phase, double freq, 
-	  double xdata[], double ydata[], size_t ndata);
+void amph_real(double *amp, double *camp, double *samp, 
+    double *phase, double freq, 
+	  double xdata[], size_t ndata);
 
 
 void dindex(unsigned long n, double arr[], unsigned long indx[]);
-
 
 
 /* THE MAIN FUNCTION ****************************************************/
@@ -103,13 +103,13 @@ void dindex(unsigned long n, double arr[], unsigned long indx[]);
  
 
 
-int fmft(int *localnfreq, double *localminfreq, double *localmaxfreq, int *localflag, 
-	 int *localndata, double *localxdata, double *localydata,  
+int fmft_real(int *localnfreq, double *localminfreq, double *localmaxfreq, int *localflag, 
+	 int *localndata, double *localxdata, 
    struct component *signal1, struct component *signal2, struct component *signal3);
 
 
-int fmft(int *localnfreq, double *localminfreq, double *localmaxfreq, int *localflag, 
-	 int *localndata, double *localxdata, double *localydata,  
+int fmft_real(int *localnfreq, double *localminfreq, double *localmaxfreq, int *localflag, 
+	 int *localndata, double *localxdata,
    struct component *signal1, struct component *signal2, struct component *signal3)
 
 /*  struct component signal1[nfreq];*/
@@ -145,9 +145,11 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
   int nearfreqflag;
   long i,j,k,l,m;
   float *powsd;
-  double *xdata, *ydata, *x, *y;
-  double centerf, leftf, rightf, fac, xsum, ysum;
-  double **freq, **amp, **phase, *f, *A, *psi;
+  double *xdata,  *x, *y;
+  double centerf, leftf, rightf, facplus, facminus, fac,
+         sinplus, cosplus, sinminus, cosminus, factemp,
+         xsum, ysum;
+  double **freq, **amp, **phase, *f, *A, *Ac, *As, *psi;
   double **Q, **alpha, *B;
 
   FILE *fp;
@@ -157,7 +159,7 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
   double maxfreq = *localmaxfreq;
   int flag = *localflag;
   size_t ndata = *localndata;
-
+  size_t ndata_real = (ndata+1)/2 ; 
   fastflag = isPowerofTwo(ndata) ;
 
   if (fastflag)
@@ -186,12 +188,14 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 
   f = dvector(1, nfreq);
   A = dvector(1, nfreq);
+  As = dvector(1, nfreq);
+  Ac = dvector(1, nfreq);
   psi = dvector(1, nfreq);
 
   
-  Q = dmatrix(1, nfreq, 1, nfreq); 
-  alpha = dmatrix(1, nfreq, 1, nfreq);
-  B = dvector(1, nfreq);
+  Q = dmatrix(1, 2*nfreq, 1, 2*nfreq); 
+  alpha = dmatrix(1, 2*nfreq, 1, 2*nfreq);
+  B = dvector(1, 2*nfreq);
  
 
   /* 1 LOOP FOR MFT, 2 LOOPS FOR FMFT, 3 LOOPS FOR NON-LINEAR FMFT */
@@ -200,7 +204,7 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
  
     if(l==1){
       xdata = localxdata -1;  // -1 because dvector vs *double
-      ydata = localydata -1;
+/*      ydata = localydata -1;*/
       /* SEPARATE REAL AND IMAGINERY PARTS */ 
 /*      for(j=1;j<=ndata;j++){*/
 /*  xdata[j] = localxdata[j-1];*/
@@ -210,10 +214,10 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 
        /* GENERATE THE QUASIPERIODIC FUNCTION COMPUTED BY MFT */
       for(i=1;i<=ndata;i++){
-	xdata[i] = 0; ydata[i] = 0; 
+	xdata[i] = 0; 
 	for(k=1;k<=nfreq;k++){
 	  xdata[i] += amp[l-1][k]*cos(freq[l-1][k]*(i-1) + phase[l-1][k]);
-	  ydata[i] += amp[l-1][k]*sin(freq[l-1][k]*(i-1) + phase[l-1][k]);
+/*    ydata[i] += amp[l-1][k]*sin(freq[l-1][k]*(i-1) + phase[l-1][k]);*/
 	}
       }
 
@@ -221,35 +225,40 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
   
 
     /* MULTIPLY THE SIGNAL BY A WINDOW FUNCTION, STORE RESULT IN x AND y */
-    window(x, y, xdata, ydata, ndata);
+    window_real(x, xdata, ndata);
     
     /* COMPUTE POWER SPECTRAL DENSITY USING FAST FOURIER TRANSFORM */
-    power(powsd, x, y, ndata);
+    power_real(powsd, x, ndata);
 
 
-    if(l==1) 
+    if(l==1)  {
 
+	printf("l=1 ; start the while loop \n");
       /* CHECK IF THE FREQUENCY IS IN THE REQUIRED RANGE */
-      while((centerf = bracket(powsd, ndata)) < minfreq || centerf > maxfreq) {
+      while((centerf = bracket_real(powsd, ndata)) < minfreq || centerf > maxfreq) {
 
-	
+	printf("centerf = %.2f \n",centerf);
 	/* IF NO, SUBSTRACT IT FROM THE SIGNAL */
 	leftf = centerf - TWOPI / ndata;
 	rightf = centerf + TWOPI / ndata;
 	
-	f[1] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	f[1] = golden_real(phisqr_real, leftf, centerf, rightf, x, ndata);
 	
-	amph(&A[1], &psi[1], f[1], x, y, ndata);
+	printf("f[1] = %.2f \n",centerf);
+	amph_real(&A[1], &Ac[1], &As[1], &psi[1], f[1], x, ndata);
+	printf("&A[1] = %.2f ; Ac = %.2f ; As = %.2f\n",&A[1], &Ac[1], &As[1]);
+	printf("------\n",centerf);
 	
 	for(j=1;j<=ndata;j++){
-	  xdata[j] -= A[1]*cos( f[1]*(j-1) + psi[1] );
-	  ydata[j] -= A[1]*sin( f[1]*(j-1) + psi[1] );
+/*    xdata[j] -= A[1]*cos( f[1]*(j-1) + psi[1] );*/
+	  xdata[j] -= Ac[1]*cos( f[1]*(j-1)  );
+	  xdata[j] -= As[1]*sin( f[1]*(j-1)  );
 	}
 
-	window(x, y, xdata, ydata, ndata);
 
-	power(powsd, x, y, ndata); 
-      }   
+	window_real(x, xdata, ndata);
+	power_real(powsd, x, ndata); 
+      }   }
 
     else 
       centerf = freq[1][1];
@@ -258,36 +267,38 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
     rightf = centerf + TWOPI / ndata;
 
     /* DETERMINE THE FIRST FREQUENCY */
-    f[1] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+    f[1] = golden_real(phisqr_real, leftf, centerf, rightf, x, ndata);
     
     /* COMPUTE AMPLITUDE AND PHASE */
-    amph(&A[1], &psi[1], f[1], x, y, ndata);
+    amph(&A[1], &Ac[1], &As[1], psi[1], f[1], x, ndata);
     
     /* SUBSTRACT THE FIRST HARMONIC FROM THE SIGNAL */
     for(j=1;j<=ndata;j++){
-      xdata[j] -= A[1]*cos( f[1]*(j-1) + psi[1] );
-      ydata[j] -= A[1]*sin( f[1]*(j-1) + psi[1] );
+      xdata[j] -= Ac[1]*cos( f[1]*(j-1)  );
+      xdata[j] -= As[1]*sin( f[1]*(j-1)  );
     }    
     /* HERE STARTS THE MAIN LOOP  *************************************/ 
     
+    printf("start the main loop \n");
     Q[1][1] = 1;
     alpha[1][1] = 1;
     
     for(m=2;m<=nfreq;m++){
+    printf("m = %i \n", m );
       /* MULTIPLY SIGNAL BY WINDOW FUNCTION */
-      window(x, y, xdata, ydata, ndata);
+      window_real(x, xdata, ndata);
       
       /* COMPUTE POWER SPECTRAL DENSITY USING FAST FOURIER TRANSFORM */
-      power(powsd, x, y, ndata);
+      power_real(powsd, x, ndata);
       
       if(l==1){
 	
-	centerf = bracket(powsd, ndata);
+	centerf = bracket_real(powsd, ndata);
 
 	leftf = centerf - TWOPI / ndata;
 	rightf = centerf + TWOPI / ndata;
 
-	f[m] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	f[m] = golden_real(phisqr_real, leftf, centerf, rightf, x, ndata);
 
 	/* CHECK WHETHER THE NEW FREQUENCY IS NOT TOO CLOSE TO ANY PREVIOUSLY
 	   DETERMINED ONE */
@@ -297,33 +308,34 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 	/* CHECK IF THE FREQUENCY IS IN THE REQUIRED RANGE */
 	while(f[m] < minfreq || f[m] > maxfreq || nearfreqflag > 0){
 	  
+	  printf("centerf = %.2f \n",centerf);
 	  /* IF NO, SUBSTRACT IT FROM THE SIGNAL */
 	  leftf = centerf - TWOPI / ndata;
 	  rightf = centerf + TWOPI / ndata;
 	  
-	  f[m] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	  f[m] = golden_real(phisqr_real, leftf, centerf, rightf, x, ndata);
 	  
-	  amph(&A[m], &psi[m], f[m], x, y, ndata);
+	printf("f[%i] = %.2f (minfreq= %.2f, maxfreq=%.2f) \n",m, f[m], minfreq, maxfreq);
+	  amph_real(&A[m], &Ac[m], &As[m], &psi[m], f[m], x,  ndata);
+	printf("&A[1] = %.2f ; Ac = %.2f ; As = %.2f\n",&A[1], &Ac[1], &As[1]);
+	printf("------\n",centerf);
 	  
 	  for(j=1;j<=ndata;j++){
-	    xdata[j] -= A[m]*cos( f[m]*(j-1) + psi[m] );
-	    ydata[j] -= A[m]*sin( f[m]*(j-1) + psi[m] );
-  /* if we were in overlaping mode, add to amplitude already measured */
-  /* should ideally update psi as well.... */ 
-      if (nearfreqflag > 0) A[nearfreqflag] += A[m] / ndata;
+	    xdata[j] -= Ac[m]*cos( f[m]*(j-1)  );
+	    xdata[j] -= As[m]*sin( f[m]*(j-1)  );
 	  }
 	  
 	  /* AND RECOMPUTE THE NEW ONE */
-	  window(x, y, xdata, ydata, ndata);
+	  window_real(x, xdata, ndata);
 	  
-	  power(powsd, x, y, ndata); 
+	  power_real(powsd, x, ndata); 
 	  
-	  centerf = bracket(powsd, ndata); 
+	  centerf = bracket_real(powsd, ndata); 
 
 	  leftf = centerf - TWOPI / ndata;
 	  rightf = centerf + TWOPI / ndata;
 	  
-	  f[m] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	  f[m] = golden_real(phisqr_real, leftf, centerf, rightf, x, ndata);
 	  
 	  nearfreqflag = 0.;
 	  for(k=1;k<=m-1;k++)
@@ -339,23 +351,60 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 	rightf = centerf + TWOPI / ndata;
 	
 	/* DETERMINE THE NEXT FREQUENCY */
-	f[m] = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	f[m] = golden_real(phisqr_real, leftf, centerf, rightf, x,  ndata);
 	
       }
 
       /* COMPUTE ITS AMPLITUDE AND PHASE */
-      amph(&A[m], &psi[m], f[m], x, y, ndata);
+      amph_real(&A[m], &Ac[m], &As[m],  &psi[m], f[m], x, ndata);
       
       /* EQUATION (3) in Sidlichovsky and Nesvorny (1997) */
-      Q[m][m] = 1;
+	    facplus = (f[m] + f[m]) * (ndata - 1.) / 2.;
+	    facminus = 0.;
+
+      facplus= sin(facplus)/facplus * PI*PI / (PI*PI - facplus*facplus);
+      facminus= 1.;
+
+      sinplus = 0.5 * sin(2*f[m]) * facplus;
+      sinminus = 0.;
+      cosplus = 0.5 * cos(2*f[m]) * facplus;
+      cosminus =  facplus;
+    	Q[2*m-1][2*m-1] = (cosminus + cosplus);
+    	Q[2*m-1][2*m]   = sinplus;
+    	Q[2*m][2*m-1]   = sinplus;
+    	Q[2*m][2*m]     = (cosminus - cosplus);
+
+
       for(j=1;j<=m-1;j++){
-	fac = (f[m] - f[j]) * (ndata - 1.) / 2.;
-	Q[m][j] = sin(fac)/fac * PI*PI / (PI*PI - fac*fac);
-	Q[j][m] = Q[m][j];
+
+	facplus = (f[m] + f[j]) * (ndata - 1.) / 2.;
+	facminus = (f[m] - f[j]) * (ndata - 1.) / 2.;
+  facminus= sin(facminus)/facminus * PI*PI / (PI*PI - facminus*facminus);
+  facplus= sin(facplus)/facplus * PI*PI / (PI*PI - facplus*facplus);
+
+
+  sinplus  = 0.5 * sin(f[m] + f[j]) * facplus ; 
+  sinminus = 0.5 * sin(f[m] - f[j]) * facminus ; 
+  cosplus  = 0.5 * sin(f[m] + f[j]) * facplus ; 
+  cosminus = 0.5 * sin(f[m] + f[j]) * facminus ; 
+
+  // coscos, cossin, sincos, sinsin
+	Q[2*m-1][2*j-1] = (cosminus + cosplus);
+	Q[2*m-1][2*j] =   (sinplus - sinminus);
+	Q[2*m][2*j-1] =   (sinplus + sinminus);
+	Q[2*m][2*j] =     (cosminus - cosplus);
+
+  // the symmetrics are, indeed, symmetric
+  //
+	Q[2*m-1][2*j-1] = Q[2*j-1][2*m-1];
+	Q[2*m-1][2*j  ] = Q[2*j-1][2*m  ];
+	Q[2*m  ][2*j-1] = Q[2*j  ][2*m-1];
+	Q[2*m  ][2*j  ] = Q[2*j  ][2*m  ];
+
       }
       
       /* EQUATION (17) */
-      for(k=1;k<=m-1;k++){
+      for(k=1;k<=2*m-1;k++){
 	B[k] = 0;
 	for(j=1;j<=k;j++)
 	  B[k] += -alpha[k][j]*Q[m][j];
@@ -363,29 +412,39 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 
       /* EQUATION (18) */
       alpha[m][m] = 1;
-      for(j=1;j<=m-1;j++)
+      for(j=1;j<=2*m-1;j++)
 	alpha[m][m] -= B[j]*B[j];
       alpha[m][m] = 1. / sqrt(alpha[m][m]);
       
       
       /* EQUATION (19) */
-      for(k=1;k<=m-1;k++){
+      for(k=1;k<=2*m-1;k++){
 	alpha[m][k] = 0;
-	for(j=k;j<=m-1;j++)
+	for(j=k;j<=2*m-1;j++)
 	  alpha[m][k] += B[j]*alpha[j][k];
 	alpha[m][k] = alpha[m][m]*alpha[m][k];
       }
-      
+ 
+/* ICICICICICI */ 
+
       /* EQUATION (22) */
       for(i=1;i<=ndata;i++){
 	xsum=0; ysum=0;
-	for(j=1;j<=m;j++){
-	  fac = f[j]*(i-1) + (f[m]-f[j])*(ndata-1.)/2. + psi[m];
-	  xsum += alpha[m][j]*cos(fac);
-	  ysum += alpha[m][j]*sin(fac);
+  /* on est a l'equation 21
+   * la difficulte est que f_m est en fait f_(2m)
+   * il faut retnancher deux composantet
+   * f[2m] = f_[2m-1] - a(2m)(2m) f_[2m-1]*sum1
+   * f_[2m-1] = f_[2m-2] - a(2m-1)(2m-1) f_[2m-2]*sum2 */
+	for(j=1;j<=2*m;j=j+2){
+    fac = f[j]*(i-1) ;
+	  xsum += alpha[2*m-1][2*j-1]*cos(fac);
+	  xsum += alpha[2*m-1][2*j]*sin(fac);
+	  ysum += alpha[2*m][2*j-1]*cos(fac);
+	  ysum += alpha[2*m][2*j]*sin(fac);
 	}
-	xdata[i] -= alpha[m][m]*A[m]*xsum;
-	ydata[i] -= alpha[m][m]*A[m]*ysum;
+	xdata[i] -= alpha[2*m-1][2*m-1]*Ac[m]*xsum;
+	xdata[i] -= alpha[2*m][2*m]*As[m]*ysum;
+	xdata[i] -= alpha[2*m][2*m-1]*As[m]*sin(fac);
       }
     }
     
@@ -393,12 +452,16 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
     for(k=1;k<=nfreq;k++){
       xsum=0; ysum=0;
       for(j=k;j<=nfreq;j++){
-	fac = (f[j]-f[k])*(ndata-1.)/2. + psi[j];
-	xsum += alpha[j][j]*alpha[j][k]*A[j]*cos(fac);
-	ysum += alpha[j][j]*alpha[j][k]*A[j]*sin(fac);
+      	xsum += alpha[2*j-1][2*j-1]*alpha[2*j-1][2*k-1]*Ac[j];
+      	xsum += alpha[2*j-1][2*j-1]*alpha[2*j-1][2*k]*Ac[j];
+      	ysum += alpha[2*j][2*j]*alpha[2*j][2*k-1]*As[j];
+      	ysum += alpha[2*j][2*j]*alpha[2*j][2*k]*As[j];
       }
-      A[k] = sqrt(xsum*xsum + ysum*ysum);
-      psi[k] = atan2(ysum,xsum);
+        xsum += alpha[2*k-1][2*k-1]*alpha[2*k-1][2*k]*Ac[k];
+       A[k] = sqrt(xsum*xsum + ysum*ysum);
+       Ac[k] = xsum;
+       As[k] = ysum;
+       psi[k] = -atan2(ysum,xsum);
     }
     
     /* REMEMBER THE COMPUTED VALUES FOR THE FMFT */
@@ -406,7 +469,7 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
       freq[l][k] = f[k];
       amp[l][k] = A[k];
       phase[l][k] = psi[k];
-    }
+  }
   }
   /* RETURN THE FINAL FREQUENCIES, AMPLITUDES AND PHASES */ 
 
@@ -489,17 +552,19 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
 
   free_dvector(f, 1, nfreq);
   free_dvector(A, 1, nfreq);
+  free_dvector(Ac, 1, nfreq);
+  free_dvector(As, 1, nfreq);
   free_dvector(psi, 1, nfreq);
  
-  free_dmatrix(Q, 1, nfreq, 1, nfreq); 
-  free_dmatrix(alpha, 1, nfreq, 1, nfreq);
-  free_dvector(B, 1, nfreq);
+  free_dmatrix(Q, 1, 2*nfreq, 1, 2*nfreq); 
+  free_dmatrix(alpha, 1, 2*nfreq, 1, 2*nfreq);
+  free_dvector(B, 1, 2*nfreq);
 
   return 1;
 }
 
 
-void window(double *x, double *y, double *xdata, double *ydata, size_t ndata)
+void window_real(double *x, double *xdata, size_t ndata)
 
 /* MULTIPLIES DATA BY A WINDOW FUNCTION */      
 {  
@@ -512,13 +577,12 @@ void window(double *x, double *y, double *xdata, double *ydata, size_t ndata)
     window = (1. - cos(window)) / 2.;
 
     x[j] = xdata[j]*window;
-    y[j] = ydata[j]*window;
 
   }
 }
 
 
-void power(float *powsd, double *x, double *y, size_t ndata)
+void power_real(float *powsd, double *x, size_t ndata)
 
 /* REARRANGES DATA FOR THE FAST FOURIER TRANSFORM, 
 CALLS FFT AND RETURNS POWER SPECTRAL DENSITY */
@@ -537,7 +601,7 @@ CALLS FFT AND RETURNS POWER SPECTRAL DENSITY */
 
   for(j=1;j<=ndata;j++){
     z[2*j-2] = x[j];
-    z[2*j-1] = y[j];
+    z[2*j-1] = 0;
   }
  
 // #ifdef N2FLAG2
@@ -562,18 +626,14 @@ if (fastflag){
 
 }
 
-  for(j=1;j<=ndata;j++)
+  for(j=1;j<=(ndata+1)/2;j++)
     powsd[j] = DSQR(z[2*j-2]) + DSQR(z[2*j-1]);
 
 
 /*  return(0);*/
 }
 
-double bracket(float *powsd, size_t ndata)
-
-/* mc: as far as I can tell this does not come from NR */
-/* FINDS THE MAXIMUM OF THE POWER SPECTRAL DENSITY  */ 
-
+double bracket_real(float *powsd, size_t ndata)
 {
   long j, maxj;
   double freq, maxpow;
@@ -591,25 +651,18 @@ double bracket(float *powsd, size_t ndata)
       }  
 
 
-  for(j=ndata/2+2;j<=ndata-1;j++)
-    if(( powsd[j] > powsd[j-1]) && (powsd[j] > powsd[j+1]))
-      if(powsd[j] > maxpow){ 
-	      maxj = j;
-        maxpow = powsd[j];
-  }
-
-
-
-  if(powsd[1] > powsd[2] && powsd[1] > powsd[ndata])
+  if(powsd[1] > powsd[2] && powsd[1] > powsd[ndata/2])
     if(powsd[1] > maxpow){ 
       maxj = 1;
       maxpow = powsd[1];
     }
 
   if(maxpow == 0) printf("DFT has no maximum ...");
-
-  if(maxj < ndata/2 - 1) freq = -(maxj-1);  
-  if(maxj > ndata/2 - 1) freq = -(maxj-ndata-1);
+ 
+   freq = (maxj-1);
+   printf("freq = %i \n",freq);
+/*  if(maxj < ndata/2 - 1) freq = -(maxj-1);  */
+/*  if(maxj > ndata/2 - 1) freq = -(maxj-ndata-1);*/
   return (TWOPI*freq / ndata);
 
   /* negative signs and TWOPI compensate for the 
@@ -619,9 +672,9 @@ double bracket(float *powsd, size_t ndata)
 #define GOLD_R 0.61803399
 #define GOLD_C (1.0 - GOLD_R)
 
-double golden(double (*f)(double, double *, double *, size_t), 
+double golden_real(double (*f)(double, double *, size_t), 
 	      double ax, double bx, double cx,
-	      double xdata[], double ydata[], size_t n)
+	      double xdata[], size_t n)
 
      /* calculates the maximum of a function bracketed by ax, bx and cx */
 
@@ -639,16 +692,16 @@ double golden(double (*f)(double, double *, double *, size_t),
     x1 = bx - GOLD_C*(bx-ax);
   }
 
-  f1 = (*f)(x1, xdata, ydata, n);
-  f2 = (*f)(x2, xdata, ydata, n);
+  f1 = (*f)(x1, xdata, n);
+  f2 = (*f)(x2, xdata, n);
 
   while(fabs(x3-x0) > FMFT_TOL*(fabs(x1)+fabs(x2))){
     if(f2 > f1){
       SHFT4(x0,x1,x2,GOLD_R*x1+GOLD_C*x3);
-      SHFT3(f1,f2,(*f)(x2, xdata, ydata, n));
+      SHFT3(f1,f2,(*f)(x2, xdata, n));
     } else {
       SHFT4(x3,x2,x1,GOLD_R*x2+GOLD_C*x0);
-      SHFT3(f2,f1,(*f)(x1, xdata, ydata, n));
+      SHFT3(f2,f1,(*f)(x1, xdata, n));
     }
   }
 
@@ -656,8 +709,9 @@ double golden(double (*f)(double, double *, double *, size_t),
   else return x2;
 }
 
-void amph(double *amp, double *phase, double freq, 
-	  double xdata[], double ydata[], size_t ndata){
+void amph_real(double *amp, double *camp, double *samp, 
+    double *phase, double freq, 
+	  double xdata[], size_t ndata){
 
   /* CALCULATES THE AMPLITUDE AND PHASE */
 
@@ -665,13 +719,13 @@ void amph(double *amp, double *phase, double freq,
   
   xphi = yphi = 0;
   
-  phifun(&xphi, &yphi, freq, xdata, ydata, ndata);
+  phifun_real(&xphi, &yphi, freq, xdata, ndata);
   
   *amp = sqrt(xphi*xphi + yphi*yphi);
-  *phase = atan2(yphi, xphi);
+  *phase = -atan2(yphi, xphi);
 }
 
-double phisqr(double freq, double xdata[], double ydata[], size_t ndata)
+double phisqr_real(double freq, double xdata[], size_t ndata)
 
 /* COMPUTES A SQUARE POWER OF THE FUNCTION PHI */
 
@@ -680,59 +734,59 @@ double phisqr(double freq, double xdata[], double ydata[], size_t ndata)
   
   xphi = yphi = 0;
   
-  phifun(&xphi, &yphi, freq, xdata, ydata, ndata);
+  phifun_real(&xphi, &yphi, freq, xdata, ndata);
   
   return xphi*xphi + yphi*yphi;
 }
 
-void phifun(double *xphi, double *yphi, double freq,  
-	      double xdata[], double ydata[], long n){
+void phifun_real(double *xphi, double *yphi, double freq,  
+	      double xdata[], long n){
 
   long i;
   double c, s;
 
-  double *xdata2, *ydata2;
+/*  double *xdata2, *ydata2;*/
+  double *xdata2;
   
   xdata2 = dvector(1, n);
-  ydata2 = dvector(1, n);
+/*  ydata2 = dvector(1, n);*/
   
-  xdata2[1] = xdata[1] / 2; ydata2[1] = ydata[1] / 2;
-  xdata2[n] = xdata[n] / 2; ydata2[n] = ydata[n] / 2;
+  xdata2[1] = xdata[1] / 2; 
+  xdata2[n] = xdata[n] / 2;
 
   for(i=2;i<=n-1;i++){
     xdata2[i] = xdata[i];
-    ydata2[i] = ydata[i];
   }
+
+/* REALLY NOT SURE ABOUT THE FAST VERSION */
 
 
 /*#ifdef N2FLAG*/
 
-if (fastflag) {
+/*if (fastflag) {*/
 
-  long j, nn;
-  nn = n;
+/*  long j, nn;*/
+/*  nn = n;*/
 
-  while(nn != 1){
-    
-    nn = nn / 2;
-    
-    c = cos(-nn*freq);
-    s = sin(-nn*freq);
-   
-    for(i=1;i<=nn;i++){
-      j=i+nn;
-      xdata2[i] += c*xdata2[j] - s*ydata2[j];
-      ydata2[i] += c*ydata2[j] + s*xdata2[j];
-    }
+/*  while(nn != 1){*/
+/*    */
+/*    nn = nn / 2;*/
+/*    */
+/*    c = cos(-nn*freq);*/
+/*    s = sin(-nn*freq);*/
+/*   */
+/*    for(i=1;i<=nn;i++){*/
+/*      j=i+nn;*/
+/*      xdata2[i] += c*xdata2[j];*/
+/*      ydata2[i] += s*xdata2[j];*/
+/*    }*/
 
-  }
- 
-  *xphi = 2*xdata2[1] / (n-1);
-  *yphi = 2*ydata2[1] / (n-1);
+/*  }*/
+/* */
+/*  *xphi = 2*xdata2[1] / (n-1);*/
+/*  *yphi = 2*ydata2[1] / (n-1);*/
 
-
-
-} else {
+/*} else {*/
 
 /*xdata2[1] = xdata[1] ; ydata2[1] = ydata[1] ;*/
 /*xdata2[n] = xdata[n] ; ydata2[n] = ydata[n] ;*/
@@ -745,14 +799,16 @@ if (fastflag) {
     c = 2*cos(-(i-1)*freq)/(n-1);
     s = 2*sin(-(i-1)*freq)/(n-1);
    
-      *xphi += c*xdata2[i] - s*ydata2[i];
-      *yphi += c*ydata2[i] + s*xdata2[i];
+      *xphi += c*xdata2[i];
+      *yphi += s*xdata2[i];
     }
 
-}
+/*}*/
+
+ printf("xdata2[12] = %.2f, *xphi = %.2f , *yphi = %.2f \n", xdata2[12], xphi, yphi );
 
 free_dvector(xdata2,1,n);
-free_dvector(ydata2,1,n);
+/*free_dvector(ydata2,1,n);*/
 
 }
 

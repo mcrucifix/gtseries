@@ -37,9 +37,7 @@ mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30)
 
   xdata = stats::as.ts(xdata)
   dt = deltat(xdata)
-     print('deltat')
-     print(dt)
-  startx = stats::start(xdata) 
+  startx = stats::start(xdata)[1]
   ydata = Im(xdata)
   xdata = Re(xdata)
   ndata = length(xdata);
@@ -82,7 +80,6 @@ mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30)
               as.integer(ndata), Ixdata, Iydata, signal1,signal2,signal3, DUP=TRUE)
 
      OUTVEC <- t(matrix(OUT[[7+flag]], 3, nfreq))
-  
 
      Freq <- OUTVEC[seq(nfreq) ]/dt
      Ampl <- OUTVEC[nfreq+seq(nfreq) ] 
