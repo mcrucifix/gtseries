@@ -206,7 +206,8 @@ reconstruct_mfft  <- function(M){
 #' @export
 plot.mfft_deco <- function (M,...){
   O <- order(M$Freq)
-  plot(M$Amp[O], M$Freq[O],'h',...)
+  plot(abs(M$Freq[O]), M$Amp[O],'h',...)
+  points(abs(M$Freq[O]), M$Amp[O],'p',...)
 }
 
 
