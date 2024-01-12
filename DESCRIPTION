@@ -1,13 +1,16 @@
 Package: gtseries
 Type: Package
-Title: Time Series analysis for paleoclimate and cyclostrat purposes
+Title: Time Series Analysis for Paleoclimate and Cyclostratigraphy Purposes
 Version: 1.05
-Date: 2023-26-10
+Date: 2023-12-15
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
 Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: Collection of time series analysis tools, focused on spectral decomposition and reconstruction, with an original focus on astronomical theory of paleoclimates and cyclostratigraphy. 
 License: MIT licence
 LazyLoad: yes
 RoxygenNote: 7.2.3
-Imports: Rdpack, sfsmisc
+Imports: Rdpack, sfsmisc, cmna, gsignal, pracma
 RdMacros: Rdpack
+Depends: 
+    R (>= 2.10)
+LazyData: true

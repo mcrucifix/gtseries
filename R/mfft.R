@@ -32,8 +32,7 @@
 #' \insertRef{sidlichovsky97aa}{gtseries}
 #
 #' @export mfft
-mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30)
-{
+mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30) {
 
   xdata = stats::as.ts(xdata)
   dt = deltat(xdata)
@@ -87,10 +86,10 @@ mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30)
 
      # if this is a real vector, there will be positive and negative frequencies corresponding to the same amplitude
      # take care and verify that this actually works this way
-
+     OUT = data.frame(Freq=Freq, Ampl=Ampl, Phase=Phase)
+     attr(OUT,"class") = "mfft_deco"
      return(data.frame(Freq=Freq, Ampl=Ampl, Phase=Phase))
-
-  }
+}
 #
 
 #

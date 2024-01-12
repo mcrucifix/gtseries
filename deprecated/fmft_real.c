@@ -47,13 +47,13 @@ X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */
 #define TWOPI (2.*PI)
 
 
-static float ftemp;
-static double dtemp;
 
 #define DSQR(a) ((dtemp=(a)) == 0.0 ? 0.0 : dtemp*dtemp)
 #define SHFT3(a,b,c) (a)=(b);(b)=(c)
 #define SHFT4(a,b,c,d) (a)=(b);(b)=(c);(c)=(d)
 
+static float ftemp; 
+static double dtemp;
 bool fastflag;
 
 /*bool isPowerofTwo (size_t n){*/

@@ -54,8 +54,10 @@ calc_amp <- function(x, nfreq, Fs){
   Freqs <- c(0,Fs)
   amps <- c(sol[1], sqrt ( apply(sol1^2, 2, sum)  ))
   Phases <- -c(0, ( apply(sol1, 2, function(i) Arg(i[1] + 1i*i[2])  )))
-  
-  OUT = data.frame(freqs=Freqs, amps=amps, Phases=Phases) 
+ 
+
+  OUT = data.frame(Freq=Freqs, Amp=amps, Phase=Phases) 
+  attr(OUT,"class") = "mfft_deco"
   return(OUT)
 }
 
@@ -72,7 +74,7 @@ calc_amp <- function(x, nfreq, Fs){
 #' A C-version should be supplied one day. 
 #'
 #' @importFrom cmna goldsectmax
-#' @importFrom pracma GramSchmidt
+#' @importFrom pracma gramSchmidt
 #' @importFrom gsignal hann
 #' @param xdata The data provided either as a time series (advised), or as a vector. 
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
@@ -93,6 +95,7 @@ mfft_real <- function(xdata, nfreq=5){
   dt = deltat(xdata)
   startx = stats::start(xdata)[1]
   N = length(xdata)
+  times <- (seq(N)-1)*dt+startx
   residu = xdata
 
   # will withold the definitive frequencies
@@ -100,14 +103,14 @@ mfft_real <- function(xdata, nfreq=5){
     k=1
     OUT <- calc_amp(xdata, nfreq, Fs)
 
-    print('OUT before corr')
-    print(OUT)
-    Fs <- OUT$freqs[-1]
-    Freqs <- OUT$freqs
-    amps <- OUT$amps
-    Phases <- OUT$Phases
-    # correction 
+    Fs <- OUT$Freq[-1]
 
+
+##   correction  METHOD ANALYTICAL. CURRENTLY NOT USED BUT SHOULD STILL BE EXPLORED
+##  -------------------------------------------------------------------------------- 
+##    Freqs <- OUT$Freq
+##    amps <- OUT$Amp
+##    Phases <- OUT$Phase
 ##     if (k < (nfreq)){
 ##       tau = (N-1) / 2.
 ##       Qp <- function(y) {
@@ -136,18 +139,75 @@ mfft_real <- function(xdata, nfreq=5){
 #   }
    xdata_synthetic <- rep(0,N)
      Fs <- rep(-1, nfreq)
-    for (i in seq(nfreq+1)) xdata_synthetic = xdata_synthetic + OUT$amps[i]*cos(OUT$freqs[i]*seq(N) + OUT$Phases[i])
+    for (i in seq(nfreq+1)) xdata_synthetic = xdata_synthetic + OUT$Amp[i]*cos(OUT$Freq[i]*seq(N) + OUT$Phase[i])
     OUT2 <- calc_amp(xdata_synthetic, nfreq, Fs)
   
-    print(OUT2)
-    print(OUT$freqs - OUT2$freqs)
+#     print(OUT2)
+#     print(OUT$Freq - OUT2$Freq)
     # adjust to units
-    OUT$freqs = OUT$freqs + (OUT$freqs - OUT2$freqs)
-    OUT$amps = OUT$amps + (OUT$amps - OUT2$amps)
-    OUT$Phases = OUT$Phases + (OUT$Phases - OUT2$Phases)
-    OUT$freqs <- OUT$freqs/dt
-    OUT$Phases <- OUT$Phases - startx*OUT$freqs
+    OUT$Freq = OUT$Freq + (OUT$Freq - OUT2$Freq)
+    OUT$Amp = OUT$Amp + (OUT$Amp - OUT2$Amp)
+    OUT$Phase = OUT$Phase + (OUT$Phase - OUT2$Phase)
+    OUT$Freq <- OUT$Freq/dt
+    OUT$Phase <- OUT$Phase - startx*OUT$Freq
+
+    O <- order(OUT$Amp, decreasing=TRUE)
+
+    OUT$Amp = OUT$Amp[O]
+    OUT$Freq = OUT$Freq[O]
+    OUT$Phase = OUT$Phase[O]
+
+  
+
+    attr(OUT,"class") = "mfft_deco"
+    attr(OUT,"nfreq") = nfreq
+    attr(OUT,"xdata") = xdata
+
+    total_ssq <- sum(xdata^2)
+
     return(OUT)
 }
+
+#' MFFT reconstruction
+#' @rdname mfft_deco
+#' @export reconstruct_mfft
+reconstruct_mfft  <- function(M){
+ if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
+ xdata <- attr(M,"xdata")
+ nfreq <- attr(M,"nfreq")
+ times <- seq(length(xdata))*dt(xdata) + startx(xdata)
+ reconstructed <- lapply(seq(nfreq), function(i) M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]) )
+}
+
+#' MFFT ANOVA
+#' @rdname mfft_deco
+#' @export mfft_anova
+reconstruct_mfft  <- function(M){
+ if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
+ xdata <- attr(M,"xdata")
+ nfreq <- attr(M,"nfreq")
+ N <- length(xdata)
+ times <- seq(length(xdata))*deltat(xdata) + start(xdata)
+ reconstructed <- sapply(seq(nfreq), function(i) M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]) )
+ cum_reconstruct <- apply(reconstructed, 1, cumsum)
+ residual_vars <- apply(apply(cum_reconstruct, 1, function(i) xdata-i) , 2, function(j) sum(j^2))
+ var0 <- sum(xdata^2)
+ master_vars <- c(var0, residual_vars[-length(residual_vars)])
+ p2s <- 2*seq(nfreq)
+ p1s <- c(0, p2s[-length(p2s)])
+ F <- (master_vars - residual_vars)/residual_vars * (N - p2s)/(p2s-p1s)
+}
+
+
+
+
+
+#' @rdname mfft_deco
+#' @export
+plot.mfft_deco <- function (M,...){
+  O <- order(M$Freq)
+  plot(M$Amp[O], M$Freq[O],'h',...)
+}
+
 
 
