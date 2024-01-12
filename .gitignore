@@ -8,3 +8,4 @@
 *.pdf
 config.log
 config.status
+src/nrutil.h.gch
