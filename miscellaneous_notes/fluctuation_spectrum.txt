@@ -1,0 +1,18 @@
+ligne rouge : cumsum de la simulation avec package 'FGN'
+ligne noire : simul avec FGN
+
+x-axis: le Hurst entre dans FGN
+y=axis: le H calcule par Haar Wavelet fluct. 
+
+a partir d'ici: on parle du H de Lovejoy
+
+H s'appelle H is the fluctua- tion (also called “nonconservation”) exponent 
+
+H=-0.5 = bruit blanc 
+
+H approx xi(1)
+H = xi(2) / 2 
+
+beta = 1 +  xi(2) = 1 + 2H
+
+donc, bruit blanc : xi(2) =  1 + 2*(-0.5) = 0

@@ -1,6 +1,7 @@
 .gitignore
 test
 old_man
+miscellaneous_notes
 ^data-raw$
 .Rprofile
 TODO
