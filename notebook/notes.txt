@@ -1,0 +1,131 @@
+the distribution of a fft of random noise is:a
+
+Gaussianness is preserved and F_w propto N(0, sigma^2). 
+
+"the variance of the noise in the frequency domain is 2pi sigma)^-2"
+
+the distribution of power of fft of random noise (periodogram) is the distribution of the square of a gaussian noise, 
+thus:
+
+distribution I(nu_j) propto X_2^2 * sigma^2/2. 
+
+(chi-square distribution of two degrees of freedom). 
+
+Now we may ask what is the distribution of the _maximum_ of a sample of N chi_square distributions
+
+https://math.stackexchange.com/questions/450139/asymptotics-of-maxima-of-i-i-d-chi-square-random-variables
+
+https://mathoverflow.net/questions/142834/asymptotic-behavior-of-max-of-chi-squared-distribution
+
+Modelling Extremal Events for Insurance and Finance
+
+We start by showing that 
+
+max_i=1,...K X_i  is distributed as sum (X_i/i). 
+
+which is itself Chi_square distributed as chi_square with 2*i dof (and almost normal). But that does not tell the distribution
+
+More here:
+
+https://math.stackexchange.com/questions/1731364/expected-value-of-the-max-of-three-exponential-random-variables
+
+
+The chi-square with 2 degrees of freedoms is the same as the exponential distribution. 
+
+Expections are d^n M(t) /dt^2 with M(t) the moment generating function
+
+
+which is 6 lambda^3 / (lambda-t)(2lambda-t)(3lambda-t)..... but that's horrible in the end. 
+
+But you could take the development above and claim that the CDF of the moximum of n independent exp. rand variable is the producte if the n individual CDFs
+
+F_m(m) = Pi_k=1^n (1-exp(-m/mu_k))
+
+still complicated. 
+
+In quora:
+
+https://www.quora.com/What-is-the-distribution-of-the-maximum-of-n-Exponential-random-variables-each-with-a-different-mean
+
+for a max of exp(-x) distributions
+
+
+the moment generating function ....
+
+Mean is sum_j=1^n (-1)^j (1/j) ((n j))
+Second moment is
+
+sum_{j=1}^{n} (-1)^j 1/j^2 (( n  j ))
+
+where ((n j ))  = n!/(j!(n-j)!)  [the binomial coefficient]
+
+but this is completely horribel to compute for a large sum. 
+
+But the limiting distribution must be Gumbel
+
+
+pdf of Gumbel is 1/beta * exp(-(z+e^-z)) [standard pour beta = 1 et mu = 0]
+
+mean : mu + 0.577215669
+variance = pi^2/6
+
+https://math.stackexchange.com/questions/3527556/gumbel-distribution-and-exponential-distribution
+
+
+The max ~ log(n) + Gumbell for exponential distributions (thus chi_sq (1) ) 
+
+For Chi^2 distributions, I find of the order of 
+
+mean ( Max ) ~ 2*( log(n) + 0.577215669) et
+var  ( Max ) ~ 4 * pi/6
+
+But I must verify that this ok. 
+
+
+> R = sapply(seq(10000), function(i) max(rchisq(1024,2)))
+> mean(R)
+[1] 15.02338
+> log(2024)
+[1] 7.612831
+> 2*log(1024)
+[1] 13.86294
+> 2*log(1024 + 0.577215669)
+[1] 13.86407
+> 2*(log(1024) + 0.577215669)
+[1] 15.01737
+> var(R)
+[1] 6.559914
+> pi^2/6
+[1] 1.644934
+> var(R - mean(R))
+[1] 6.559914
+> pi^2/6*4
+[1] 6.579736
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
