@@ -93,6 +93,9 @@ enhance_ridge <- function(A,R,confidence=0.95,inter=0.08)
 }
 
 
+
+
+#' @export reconstruct_morlet
 reconstruct_morlet  <- function(W,scales=c(-Inf,Inf), periods=NULL)
 {
  if (!(attr(W,"class")=="wavelet")) stop ("object is not a wavelet transform")

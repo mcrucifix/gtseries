@@ -182,7 +182,7 @@ reconstruct_mfft  <- function(M){
 #' MFFT ANOVA
 #' @rdname mfft_deco
 #' @export mfft_anova
-reconstruct_mfft  <- function(M){
+mfft_anova  <- function(M){
  if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
  xdata <- attr(M,"xdata")
  nfreq <- attr(M,"nfreq")

@@ -88,7 +88,7 @@ mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30) {
      # take care and verify that this actually works this way
      OUT = data.frame(Freq=Freq, Ampl=Ampl, Phase=Phase)
      attr(OUT,"class") = "mfft_deco"
-     return(data.frame(Freq=Freq, Ampl=Ampl, Phase=Phase))
+     return(OUT)
 }
 #
 

@@ -8,7 +8,7 @@ Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: Collection of time series analysis tools, focused on spectral decomposition and reconstruction, with an original focus on astronomical theory of paleoclimates and cyclostratigraphy. 
 License: MIT licence
 LazyLoad: yes
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Imports: Rdpack, sfsmisc, cmna, gsignal, pracma
 RdMacros: Rdpack
 Depends: 

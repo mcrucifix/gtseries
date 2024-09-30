@@ -2,13 +2,18 @@
 % Please edit documentation in R/mfft_real.R
 \name{reconstruct_mfft}
 \alias{reconstruct_mfft}
+\alias{mfft_anova}
 \alias{plot.mfft_deco}
 \title{MFFT reconstruction}
 \usage{
-reconstruct_mfft(M, times)
+reconstruct_mfft(M)
+
+mfft_anova(M)
 
 \method{plot}{mfft_deco}(M, ...)
 }
 \description{
 MFFT reconstruction
+
+MFFT ANOVA
 }
