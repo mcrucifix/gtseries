@@ -1,0 +1,5 @@
+- make nicer graphs for mfft
+- finalise computations for mfft_real_ter (use notebook)
+- use that one only; deprecate mfft_real
+- work on documentation
+- and make a paper ! 
