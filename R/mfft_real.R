@@ -56,7 +56,7 @@ calc_amp <- function(x, nfreq, Fs){
   Phases <- -c(0, ( apply(sol1, 2, function(i) Arg(i[1] + 1i*i[2])  )))
  
 
-  OUT = data.frame(Freq=Freqs, Amp=amps, Phase=Phases) 
+  OUT = data.frame(Freq=Freqs, Amp=amps, Phases=Phases) 
   attr(OUT,"class") = "mfft_deco"
   return(OUT)
 }
@@ -90,7 +90,7 @@ calc_amp <- function(x, nfreq, Fs){
 #' print(OUT)
 #'
 #' @export mfft_real
-mfft_real <- function(xdata, nfreq=5){
+mfft_real <- function(xdata, nfreq=5, correction=TRUE){
   xdata = stats::as.ts(xdata)
   dt = deltat(xdata)
   startx = stats::start(xdata)[1]
@@ -137,6 +137,7 @@ mfft_real <- function(xdata, nfreq=5){
     # correction  (methode 2)
 
 #   }
+  if (correction){
    xdata_synthetic <- rep(0,N)
      Fs <- rep(-1, nfreq)
     for (i in seq(nfreq+1)) xdata_synthetic = xdata_synthetic + OUT$Amp[i]*cos(OUT$Freq[i]*seq(N) + OUT$Phase[i])
@@ -148,6 +149,7 @@ mfft_real <- function(xdata, nfreq=5){
     OUT$Freq = OUT$Freq + (OUT$Freq - OUT2$Freq)
     OUT$Amp = OUT$Amp + (OUT$Amp - OUT2$Amp)
     OUT$Phase = OUT$Phase + (OUT$Phase - OUT2$Phase)
+  }
     OUT$Freq <- OUT$Freq/dt
     OUT$Phase <- OUT$Phase - startx*OUT$Freq
 
@@ -199,15 +201,34 @@ mfft_anova  <- function(M){
 }
 
 
-
+#' @rdname mfft_deco
+#' @export
+as.data.frame.mfft_deco <- function(x) {data.frame(Freq=x$Freq, Amp=x$Amp, Phases=x$Phases)}
 
 
 #' @rdname mfft_deco
 #' @export
 plot.mfft_deco <- function (M,...){
-  O <- order(M$Freq)
-  plot(abs(M$Freq[O]), M$Amp[O],'h',...)
-  points(abs(M$Freq[O]), M$Amp[O],'p',...)
+#   O <- order(M$Freq)
+  plot(abs(M$Freq), abs(M$Amp),'h',...)
+  points(abs(M$Freq), abs(M$Amp),'p',...)
+}
+
+#' @rdname mfft_deco
+#' @export
+lines.mfft_deco <- function (M,...){
+#   O <- order(M$Freq)
+  lines(abs(M$Freq), abs(M$Amp),'h',...)
+  points(abs(M$Freq), abs(M$Amp),'p',...)
+}
+
+
+
+
+#' @rdname mfft_deco
+#' @export
+print.mfft_deco <- function (M,...){
+  print.data.frame(as.data.frame(M))
 }
 
 

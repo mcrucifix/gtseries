@@ -4,7 +4,7 @@
 \alias{mfft_real_ter}
 \title{Modified Fourier transform  for real series (variant)}
 \usage{
-mfft_real_ter(xdata, nfreq)
+mfft_real_ter(xdata, nfreq = 5, correction = TRUE)
 }
 \arguments{
 \item{xdata}{The data provided either as a time series (advised), or as a vector.}

@@ -3,14 +3,23 @@
 \name{reconstruct_mfft}
 \alias{reconstruct_mfft}
 \alias{mfft_anova}
+\alias{as.data.frame.mfft_deco}
 \alias{plot.mfft_deco}
+\alias{lines.mfft_deco}
+\alias{print.mfft_deco}
 \title{MFFT reconstruction}
 \usage{
 reconstruct_mfft(M)
 
 mfft_anova(M)
 
+\method{as.data.frame}{mfft_deco}(x)
+
 \method{plot}{mfft_deco}(M, ...)
+
+\method{lines}{mfft_deco}(M, ...)
+
+\method{print}{mfft_deco}(M, ...)
 }
 \description{
 MFFT reconstruction

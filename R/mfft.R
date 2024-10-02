@@ -86,10 +86,15 @@ mfft <- function(xdata, minfreq=NULL, maxfreq=NULL, flag=1, nfreq=30) {
 
      # if this is a real vector, there will be positive and negative frequencies corresponding to the same amplitude
      # take care and verify that this actually works this way
-     OUT = data.frame(Freq=Freq, Ampl=Ampl, Phase=Phase)
+     OUT = data.frame(Freq=Freq, Amp=Ampl, Phases=Phase)
      attr(OUT,"class") = "mfft_deco"
+     attr(OUT,"nfreq") = nfreq
+     attr(OUT,"xdata") = xdata
      return(OUT)
 }
+
+
+
 #
 
 #

@@ -65,20 +65,21 @@ analyse <- function(xdata, nfreq){
     # We are looking at the projection of U in the space spanned by C and S. This is
     
     q <- quarto(fmax, fmax)
-    
-    if (fmax > 1.e-10){
+    if (fmax > freqs[2]/2){
     xx <- rbind(cos(fmax*t), sin(fmax*t))
     prod <- xx %*% hx/N
     a  <- solve(q, prod)
     phase[m] <- -atan(a[2]/a[1])    
+    phi[m] <- prod[1]*cos(phase[m]) - prod[2]*sin(phase[m])   # must be a way to be faster
     } else {
       phase[m] = 0.
+      phi[m] = 0. 
+      nu[m] = 0.
     }
     
     # phi[m] is < 
     
     f[[m]] <- cos(fmax*t + phase[m])
-    phi[m] <- prod[1]*cos(phase[m]) - prod[2]*sin(phase[m])   # must be a way to be faster
     # should be equivalent to
     ## phi_test <- sum(f[[m]] * hx)/N    # to be verifed - -> ok
     
@@ -87,6 +88,8 @@ analyse <- function(xdata, nfreq){
                                                  # these are symmetric matrices
                                                  # and we only populate the j <= m 
     
+    # again, in principle, the hprod can be approximated with its analytical limit
+    #
     # before normalisation
     # B[[m]] = sum_j=1,m A[m,j]*f[j] et
     # B[[m]] = ( f[m] - sum_(1,m-1) (f[m] %*% B[i]) * B[i]
@@ -96,7 +99,7 @@ analyse <- function(xdata, nfreq){
     
     #/ ||B[[m]]||
     
-    # on peut alors verifier que
+    # one can then verify that:
     
     # B[[m]] %*% B[j]] = 
     # ( f[m] - sum_(1,m-1) (f[m] %*% B[i]) * B[i] ) %*%  B[j] =
@@ -113,7 +116,7 @@ analyse <- function(xdata, nfreq){
       for (j in seq(m-1)) for (i in seq(j,(m-1))) A[m,j] = A[m,j] - fmbi[i]*A[i,j]
     }
     
-    # donc la on a, a ce stade, B[[m]] = sum [A[m,j]] * f[j]
+    # so, at this stage, we have B[[m]] = sum [A[m,j]] * f[j]
     
     # B[[2]] = (A[2,1]*f[1] + A[2,2]*f[2])
     # B[[3]] = (A[3,1]*f[1] + A[3,2]*f[2] + A[3,3] * f[3] ) 
@@ -143,15 +146,11 @@ analyse <- function(xdata, nfreq){
     # amp[j] = contribution of the sum( S[m]*B[m]) to the f[[m]]
     # amp[j] = sum(m in seq(j)) S(m) * A[m,j]
     
-    # j=1
-    # amp
-  #   [j]=0
     # for (i in seq(m)) amp[j] = amp[j]+S[m]*A[m,j]
-    
-    
     # and the residual signal
     
     # f[[m+1]] = f[[m]] - S[m] * B[[m]]
+
     x[[m+1]] = x[[m]]
     for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
   
@@ -164,7 +163,8 @@ analyse <- function(xdata, nfreq){
     for (j in seq(m)) amp[m] = amp[m] + A[m,j]*S[m]
   }
   
-  return(data.frame(amps=amp, freqs=nu, Phases=phase))
+  OUT = data.frame(Freq=nu, Amp=amp, Phases=phase) 
+  return(OUT)
 }
   
      
@@ -210,39 +210,36 @@ analyse <- function(xdata, nfreq){
 #'
 #' @export mfft_real_ter
   # will withold the definitive frequencies
-mfft_real_ter <- function(xdata, nfreq){
+mfft_real_ter <- function(xdata, nfreq=5, correction=TRUE){
     N <- length(xdata)
 
     xdata = stats::as.ts(xdata)
     dt = deltat(xdata)
     startx = stats::start(xdata)[1]
-#     print('startx')
-#     print(startx)
     N <- length(xdata)
     OUT <- analyse(xdata, nfreq)
 
-#     print('OUT before corr')
-#     print(OUT)
-#     Freqs <- OUT$freqs
-#     amps <- OUT$amps
-#     Phases <- OUT$Phases
-    # correction 
 
     # correction  (methode 2)
 #   }
+  if (correction){
    xdata_synthetic <- rep(0,N)
-    for (i in seq(nfreq)) xdata_synthetic = xdata_synthetic + OUT$amps[i]*cos(OUT$freqs[i]*seq(N) + OUT$Phases[i])
+    for (i in seq(nfreq)) xdata_synthetic = xdata_synthetic + OUT$Amp[i]*cos(OUT$Freq[i]*seq(N) + OUT$Phases[i])
     OUT2 <- analyse(xdata_synthetic, nfreq)
 #     print ('Synthetic')
 #     print(OUT2)
 #     print ('Corrections')
 #     print(OUT$freqs - OUT2$freqs)
     # adjust to units
-    OUT$freqs = OUT$freqs + (OUT$freqs - OUT2$freqs)
-    OUT$amps = OUT$amps + (OUT$amps - OUT2$amps)
+    OUT$Freq = OUT$Freq + (OUT$Freq - OUT2$Freq)
+    OUT$Amp = OUT$Amp + (OUT$Amp - OUT2$Amp)
     OUT$Phases = OUT$Phases + (OUT$Phases - OUT2$Phases)
-    OUT$freqs <- OUT$freqs/dt
-    OUT$Phases <- OUT$Phases - startx*OUT$freqs
+  }
+    OUT$Freq <- OUT$Freq/dt
+    OUT$Phases <- OUT$Phases - startx*OUT$Freq
+    attr(OUT, "class") <- "mfft_deco"
+    attr(OUT, "data")  <- xdata
+    attr(OUT, "nfreq")  <- nfreq
 #     print ('After corrections')
 #     print(OUT)
     return(OUT)

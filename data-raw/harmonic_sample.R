@@ -8,7 +8,7 @@ harmonic_sample <- list()
 harmonic_sample_spectrum <- list(
   Amp = c(1, 1.3, 0.134994, 0.4, 0.11), 
   Freq = c(0.13423167, 0.119432, 0, 0.653167, 0.78913498),
-  Phase = c(0, 2.314, 0, 0.653167, 0))
+  Phases = c(0, 2.314, 0, 0.653167, 0))
 
 attr(harmonic_sample_spectrum,"class") <- 'mfft_deco'
 
