@@ -208,9 +208,19 @@ as.data.frame.mfft_deco <- function(x) {data.frame(Freq=x$Freq, Amp=x$Amp, Phase
 
 #' @rdname mfft_deco
 #' @export
-plot.mfft_deco <- function (M,...){
+plot.mfft_deco <- function (M,periods=FALSE,...){
 #   O <- order(M$Freq)
-  plot(abs(M$Freq), abs(M$Amp),'h',...)
+  plot(abs(M$Freq), abs(M$Amp),'h',ylab="Amplitudes", xlab="",  ...)
+  if (periods) {
+    frequencies <- pretty(range(M$Freq/(2*pi)))
+    labels <- as.character(1/frequencies)
+    if (0 %in% frequencies) labels[which(frequencies == 0)] = "∞"
+    axis(1, line=3, at=2*pi*frequencies, labels=labels)
+    mtext("Rate", 1, 2)
+    mtext("Period", 1, 4)
+  } else {
+    mtext("Rate", 1, 3)
+  }
   points(abs(M$Freq), abs(M$Amp),'p',...)
 }
 
@@ -223,12 +233,10 @@ lines.mfft_deco <- function (M,...){
 }
 
 
-
-
 #' @rdname mfft_deco
 #' @export
 print.mfft_deco <- function (M,...){
-  print.data.frame(as.data.frame(M))
+  print.data.frame(cbind(as.data.frame(M), Period=2*pi/M$Freq))
 }
 
 
