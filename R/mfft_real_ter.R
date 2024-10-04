@@ -106,13 +106,12 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
     # Be X the signal for which we look for amplitude and phase
     # We are looking at the projection of U in the space spanned by C and S. This is
     
-    fmax <- 0.0429
     q <- quarto(fmax, fmax)
     if (fmax > freqs[2]/2){
     xx <- rbind(cos(fmax*t), sin(fmax*t))
     prod <- xx %*% hx/N
 
-    # to do : techincally given that q is only 2x2 we do not need the solve function
+    # to do : given that q is only 2x2 we do not need the solve function
     # it is pretty easy to o the diagonalisation by hand. 
     a  <- solve(q, prod)
     phase[m] <- -atan(a[2]/a[1])    
@@ -231,22 +230,6 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
 }
   
      
-# cette partie doit pouvoir etre acceleree en tirant partit du fait
-# que l'expression analytitque de xx%*xx est connue
-# voir non-working code fmft_real.C
-# Il faut utiliser l'integrale connue int_0^2pi cos(x)hann(x) 
-# on utilise: cos(a)cos(b) = 0.5*(cos(a+b) - cos(a-b)) etc pour toutes les comb. cossin
-# et int_0^2T cos(wx) = 1/W(sin[2T]-sin[0]) , ou si on applique le produit scalaire avec fenetre Hann
-# et int_0^2T cos(wx)Hann[x] = (pi^2)(pi^2-w^2T^2)(sin(wT)/wT) * (coswT)
-# et int_0^2T sin(wx)Hann[x] = (pi^2)(pi^2-w^2T^2)(sin(wT)/wT) * (sin(wT))
- # sin(wT)/(wT) = 1
- # et on se rappelle que la decomposition gramschmidt
- # c'est simplement, avec x_i le ie vecteur
- # xn_1 = x_1 / ||x_1||  
- # xn_(i+1) = x_(i+1) - sum_(j=1,i) x_(i+1)%*%x(i)/||x_(i+1)||
-# en C, cela doit reduire le temps de calcul considerablement
-
-
 #' Modified Fourier transform  for real series (variant)
 #'
 #' R-coded version of the Modified Fourier Transform
@@ -290,21 +273,23 @@ mfft_real_ter <- function(xdata, nfreq=5, correction=1, fast=TRUE){
   if (correction == 2){
    xdata_synthetic <- rep(0,N)
    t <- seq(N)-1
-    for (i in seq(nfreq)) xdata_synthetic = xdata_synthetic + OUT$amp[i]*cos(OUT$nu[i]*t + OUT$phase[i])
-    OUT2 <- analyse(xdata_synthetic, nfreq, fast)
-    OUT$nu = OUT$nu + (OUT$nu - OUT2$nu)
-    OUT$amp = OUT$amp + (OUT$amp - OUT2$amp)
-    OUT$phase = OUT$phase + (OUT$phase - OUT2$phase)
-    } else if (correction == 1){
+   for (i in seq(nfreq)) xdata_synthetic = xdata_synthetic + OUT$amp[i]*cos(OUT$nu[i]*t + OUT$phase[i])
+   OUT2 <- analyse(xdata_synthetic, nfreq, fast)
+   OUT$nu = OUT$nu + (OUT$nu - OUT2$nu)
+   OUT$amp = OUT$amp + (OUT$amp - OUT2$amp)
+   OUT$phase = OUT$phase + (OUT$phase - OUT2$phase)
+   } else if (correction == 1){
 
-    for (j in seq(nfreq-1)){
-       epsilon = 0 * OUT$amp[j] * Qprime(-2 * OUT$nu[j] * N2)*cos(2 * OUT$nu[j] * N2 + 2 * OUT$phase[j])
-       for (s in seq(j+1, nfreq)) {
+    for (j in seq(nfreq)){
+       epsilon = OUT$amp[j] * Qprime(-2 * OUT$nu[j] * N2)*cos(2 * OUT$nu[j] * N2 + 2 * OUT$phase[j])
+       print ('epsilon')
+       print (epsilon)
+       if ((j+1) <= nfreq) { for (s in seq(j+1, nfreq)) {
         epsilon = epsilon + OUT$amp[s]  * 
          ( 
           Qprime( (OUT$nu[s] - OUT$nu[j])*N2)*cos((OUT$nu[j] - OUT$nu[s])*N2 + OUT$phase[j] - OUT$phase[s] ) -
           Qprime(( OUT$nu[s] + OUT$nu[j])*N2)*cos((OUT$nu[j] + OUT$nu[s])*N2 + OUT$phase[j] + OUT$phase[s] ) )
-     }
+     }}
     epsilon = epsilon / Qsecond0 / N2 / OUT$amp[j]
 
     OUT$nu[j] = OUT$nu[j] - epsilon
@@ -312,8 +297,9 @@ mfft_real_ter <- function(xdata, nfreq=5, correction=1, fast=TRUE){
     OUT <- analyse(xdata, nfreq, fast, nu = OUT$nu)
   }
 
-  # account for tseries scaling 
-    OUT$nu <- OUT$nu/dt
+  # account for tseries scaling (i.e. uses the vaue of deltat and start encoded
+  # in the time series object 
+    OUT$nu <- OUT$nu / dt
     OUT$phase <- OUT$phase - startx*OUT$nu
 
   # rearrange terms to avoid negative amplitudes and have phases in the right quandrant
@@ -342,7 +328,6 @@ mfft_real_ter <- function(xdata, nfreq=5, correction=1, fast=TRUE){
 
     # rename for class compatibility
     names(OUT) <- c("Freq","Amp","Phases")
-
     attr(OUT, "class") <- "mfft_deco"
     attr(OUT, "data")  <- xdata
     attr(OUT, "nfreq")  <- nfreq
