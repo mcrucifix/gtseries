@@ -15,7 +15,7 @@ mfft_anova(M)
 
 \method{as.data.frame}{mfft_deco}(x)
 
-\method{plot}{mfft_deco}(M, ...)
+\method{plot}{mfft_deco}(M, periods = FALSE, ...)
 
 \method{lines}{mfft_deco}(M, ...)
 

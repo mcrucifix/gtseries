@@ -272,9 +272,9 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
 #' OUT <- mfft_real(x_orig)
 #' print(OUT)
 #'
-#' @export mfft_real_ter
+#' @export mfft_real_quatro
   # will withold the definitive frequencies
-mfft_real_ter <- function(xdata, nfreq=5, correction=1, fast=TRUE){
+mfft_real_quatro <- function(xdata, nfreq=5, correction=1, fast=TRUE){
     N <- length(xdata)
     N2 <- N/2.
     xdata = stats::as.ts(xdata)
