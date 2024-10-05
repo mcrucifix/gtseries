@@ -1,6 +1,6 @@
 
 Q <- function(wT) {sin(wT)/(wT)*(pi^2)/(pi^2-(wT)^2)}
-Qprime <- function(y) {pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2))}
+Qprime <- function(y) {ifelse(y==0, 0, pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2)))}
 Qsecond0 <- 2/pi^2 - 1./3. 
 
 analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
@@ -8,7 +8,28 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
 
   # nu can be provided, in which case the frequencies
   # are considered to be given
-  
+  if (!is.null(nu))
+  {
+    # we will need two versions of nfreq, one for the cosine and one for the cosine
+    # if if there is a zero frequency we only need it once
+    nutemp <- unlist ( lapply( nu, function(a) if (a==0) return (a) else return (  c(a,-a)))  )
+    phase <-  unlist ( lapply( nu, function(a) if (a==0) return (0) else return (  c(0, pi/2)))  )
+    nu <- nutemp
+    if (length(nu) < 2*nfreq) {
+      # this will typically occur if one zero frequency was provided
+      nu[2*nfreq] <- NA
+      phase[2*nfreq] <- NA
+    }
+    print ('nu 2')
+    print(nu)
+    print ('phase 2')
+    print(phase)
+  } else 
+  {
+    nu <- rep(NA,2*nfreq)
+    phase <- rep(NA,2*nfreq)
+  }
+
   N <- length(xdata)
   T <- N / 2
   hann <- function(N) {return (1-cos(2*pi*seq(0,(N-1))/(N)))};
@@ -18,45 +39,13 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   
   hprod <- function(x,y) sum(x * hN * y)/N
   
-  if (fast){
-  quarto <- function(f1,f2){
-    fm <- (f1-f2)*T
-    fp <- (f1+f2)*T
-    Qm <- ifelse(fm == 0, 1 ,  Q(fm))
-    Qp <- ifelse(fp == 0, 1 ,  Q(fp))
-    cosm <- cos(fm)*Qm
-    cosp <- cos(fp)*Qp
-    sinm <- sin(fm)*Qm
-    sinp <- sin(fp)*Qp
-    M <- 0.5 * matrix(c( 
-            cosm + cosp , 
-           -sinm + sinp , 
-            sinm + sinp , 
-            cosm - cosp ), 2 , 2 )
-    return(M)
-  }} else 
-  {
-  quarto <- function(f1,f2){
-    M <- matrix(c(sum(cos(f1*t)*cos(f2*t)*hN), 
-                 sum(cos(f1*t)*sin(f2*t)*hN), 
-                 sum(sin(f1*t)*cos(f2*t)*hN), 
-                 sum(sin(f1*t)*sin(f2*t)*hN)),2,2)
-    M <- M/N
-    return(M)
-  }
-  }
+  # B_i = sum[m<= i](A_im) f_m the orthogonal base signals
+  # x_m what remains of the signal at time step m
   
-  
-  
-    # B_i = sum[m<= i](A_im) f_m the orthogonal base signals
-    # x_m what remains of the signal at time step m
-  
-  S <- rep(0,nfreq)
-  if (is.null(nu)) nu <- rep(NA,nfreq)
-  phase <- rep(0,nfreq)
-  amp <- rep(0,nfreq)
-  A <- matrix(0,nfreq,nfreq)
-  Q <- matrix(0,nfreq,nfreq)
+  S <- rep(0,2*nfreq)
+  amp <- rep(NA,2*nfreq)
+  A <- matrix(0,2*nfreq,2*nfreq)
+  Q <- matrix(0,2*nfreq,2*nfreq)
   f <-  list()
   x <-  list()
   B <- list()
@@ -65,10 +54,19 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   x[[1]] = xdata
   
    
-  for (m in seq(nfreq)){
+  for (m in seq(2*nfreq)){
   hx <- hN*x[[m]]
+    # there is a little tweak here: 
+    # if we have reached 2*nfreq and not nu[m] is na, then
+    # it means that we have encountered a constant somewhere, and that last step should be skipped. 
+    if ( ! ( m == 2*nfreq && is.na(nu[m]))) {
+    # ok we are on business
     if (is.na(nu[m])){
-    # are frequencies already provided ? 
+    # is the "m" frequency already provided ? 
+    # either there were provided from the start and developped  in the first lines of this routine
+    # or either they were not provided, but we are in this case where it was set in "m-1" because
+    # we identified a non-null frequency
+    # in both configurations, we look at a frequency with the fourier transform
     fbase <- freqs[which.max(power(hx))]
     brackets <- c(fbase-pi/N, fbase+pi/N);
     thx <- t(hx)
@@ -95,33 +93,24 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
 
 
 
-    nu[m] <- fmax
-} else {
-   fmax <- nu[m] }   # else, use the provided frequency
-    
-    # determine amplitude and phase
-    
-    # Be U = the matrix (ccoscos/cossin/sincos/sinsin) and its corresponbind crossproduct V
-    # Be C the cos vector, and S the sin vector. They are _not_ orthogonal
-    # Be X the signal for which we look for amplitude and phase
-    # We are looking at the projection of U in the space spanned by C and S. This is
-    
-    q <- quarto(fmax, fmax)
     if (fmax > freqs[2]/2){
-    xx <- rbind(cos(fmax*t), sin(fmax*t))
-    prod <- xx %*% hx/N
-
-    # to do : given that q is only 2x2 we do not need the solve function
-    # it is pretty easy to o the diagonalisation by hand. 
-    a  <- solve(q, prod)
-    phase[m] <- -atan(a[2]/a[1])    
+      # if we really identified a frequency
+      # we are in this case where the frequency was not a priori provided
+      # we se set this phase to zero, and the next one to pi/2, and also set the frequencies accordinly
+    phase[m] <- 0.
+    nu[m]  <- fmax
+    phase[m+1] <- pi/2. 
+    nu[m+1] <- -fmax
     } else {
-      phase[m] = 0.
-      nu[m] = 0.
-    }
+      # again we are still in thes case where a freqency was not a priori provided
+      # but the more particular case where the frequency is (with tolerance) considered as zero
+      # f[[m]] will effectively be constant. 
+      phase[m] <- 0. 
+      nu[m] <- 0.
+    }}
     
-    f[[m]] <- cos(fmax*t + phase[m])
-    
+    f[[m]] <- cos(nu[m]*t + phase[m])
+
     if (fast)  # we use analytical forms of the products
     {
        
@@ -149,7 +138,6 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
                                                  # and we only populate the j <= m 
     }
     }
-    
 
     #
     # before normalisation
@@ -177,22 +165,23 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
       for (j in seq(m-1)) for (i in seq(j)) fmbi[j] = fmbi[j] + A[j,i]*Q[m,i]
       for (j in seq(m-1)) for (i in seq(j,(m-1))) A[m,j] = A[m,j] - fmbi[i]*A[i,j]
     }
-    
     # so, at this stage, we have B[[m]] = sum [A[m,j]] * f[j]
     
     # B[[2]] = (A[2,1]*f[1] + A[2,2]*f[2])
     # B[[3]] = (A[3,1]*f[1] + A[3,2]*f[2] + A[3,3] * f[3] ) 
     
+
     norm = 0
     if (m > 1){
     for (i in seq(m)) {
       norm = norm + (A[m,i]*A[m,i]*Q[i,i])
-      if (i>1) for (j in seq(i-1)) norm  = norm + 2*A[m,i]*A[m,j]*Q[i,j]
-    }
+      if (i>1) for (j in seq(i-1)) { norm  = norm + 2*A[m,i]*A[m,j]*Q[i,j]
+    }}
     } else {
-      norm = A[m,m]*A[m,m]*Q[m,m]
+      norm <- A[m,m]*A[m,m]*Q[m,m]
     }
-    
+ 
+ 
     
     A[m,] = A[m,] / sqrt(norm)
       
@@ -217,14 +206,41 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
     for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
   
   }
+
+  }
   
   # amplitudes
   
-  for (m in seq(nfreq)){
+  for (m in seq(2*nfreq)){
+    if (!is.na(nu[m])) {
     amp[m]=0;
     for (j in seq(m)) amp[m] = amp[m] + A[m,j]*S[m]
+    # if the perivous "m" was already of the same frequency, we can merge amplitudes and set phase
+    if ((m > 1) && (nu[m-1] == -nu[m])){
+        print("phase computation")
+        print (c(m-1, m))
+        print (c(nu[m-1], nu[m]))
+        print (c(amp[m-1], amp[m]))
+        print("phase computation (2)")
+        
+        phase[m] <- atan(-amp[m]/amp[m-1])
+        amp[m] <- sqrt(amp[m-1]^2 + amp[m]^2)
+        print ("phase")
+        print (c(phase[m], amp[m]))
+        amp[m-1] <- NA
+        phase[m-1] <- NA
+    }
+    }
   }
   
+  # at this point we should have exactly nfreq non na values
+  # we print a message if this is not right, and in that case I suspect some debugging will be needed. 
+
+  valid_frequencies <- which(!is.na(amp))
+  nu <- -nu[valid_frequencies]
+  amp <- amp[valid_frequencies]
+  phase <- phase[valid_frequencies]
+  if (length(valid_frequencies) != nfreq) message (sprintf("something goes wrong : %i valid frequencies, and nfreq = %i"), valid_frequencies, nfreq)
   OUT = data.frame(nu=nu, amp=amp, phase=phase) 
   return(OUT)
 }
@@ -283,7 +299,7 @@ mfft_real_ter <- function(xdata, nfreq=5, correction=1, fast=TRUE){
     for (j in seq(nfreq)){
        epsilon = OUT$amp[j] * Qprime(-2 * OUT$nu[j] * N2)*cos(2 * OUT$nu[j] * N2 + 2 * OUT$phase[j])
        print ('epsilon')
-       print (epsilon)
+       print (c(epsilon,j, OUT$amp[j], OUT$nu[j], OUT$phase[j]))
        if ((j+1) <= nfreq) { for (s in seq(j+1, nfreq)) {
         epsilon = epsilon + OUT$amp[s]  * 
          ( 
