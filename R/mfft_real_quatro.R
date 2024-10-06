@@ -6,6 +6,7 @@ Qsecond0 <- 2/pi^2 - 1./3.
 analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   
 
+  # nu = c(0.0429, 0.0186)
   # nu can be provided, in which case the frequencies
   # are considered to be given
   if (!is.null(nu))
@@ -20,10 +21,6 @@ analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
       nu[2*nfreq] <- NA
       phase[2*nfreq] <- NA
     }
-    print ('nu 2')
-    print(nu)
-    print ('phase 2')
-    print(phase)
   } else 
   {
     nu <- rep(NA,2*nfreq)
@@ -43,6 +40,7 @@ analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   # x_m what remains of the signal at time step m
   
   S <- rep(0,2*nfreq)
+  Prod <- rep(0,2*nfreq)
   amp <- rep(NA,2*nfreq)
   A <- matrix(0,2*nfreq,2*nfreq)
   Q <- matrix(0,2*nfreq,2*nfreq)
@@ -185,14 +183,28 @@ analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
     
     A[m,] = A[m,] / sqrt(norm)
       
-    # S[m] = x_orig %*% B[[m]] = sum hprod(x[[1]],f[[j]])*A[m,j]
      
+    Prod[m] = hprod(x[[1]],f[[m]])
+    # les prods sont corrects
+
     S[m] = 0. 
-    for (j in seq(m))  S[m] = S[m] + hprod(x[[1]],f[[j]])*A[m,j]
+    for (j in seq(m))  S[m] = S[m] + Prod[j]*A[m,j]
+    # for (j in seq(m))  S[m] = S[m] + A[m,j] * hprod(x[[1]], f[[j]])
+
+    # les Sm sont les projections dans la nouvelle base
     # not necessary, for verification only
-    B[[m]]=0
-    for (j in seq(m)) B[[m]] = B[[m]] + A[m,j] * f[[j]]
-    
+    # computes the B and verify they are orthonormal
+     B[[m]]=0
+     for (j in seq(m)) B[[m]] = B[[m]] + A[m,j] * f[[j]]
+
+
+    #print ('S[m] calcule de deux facons')
+    #print (m)
+    #print (S[m])
+    #print (hprod(x[[1]], B[[m]]))
+    #print ('end test')
+
+    # for (j in seq(m)) print (sprintf("B%i%i : %3g", i, j, hprod(B[[j]], B[[m]])))
     # if you are curious, the amplitude of the signal will be
     # amp[j] = contribution of the sum( S[m]*B[m]) to the f[[m]]
     # amp[j] = sum(m in seq(j)) S(m) * A[m,j]
@@ -200,38 +212,85 @@ analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
     # for (i in seq(m)) amp[j] = amp[j]+S[m]*A[m,j]
     # and the residual signal
     
-    # f[[m+1]] = f[[m]] - S[m] * B[[m]]
+    # x[[m+1]] = x[[m]] - S[m] * B[[m]]
+
 
     x[[m+1]] = x[[m]]
-    for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
+    # for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
+    x[[m+1]] = x[[m+1]] - S[m] * B[[m]]
+#     print('residu final')
+#     print(m)
+#     print (x[[m+1]][seq(20)])
   
   }
 
   }
   
+  #print ('TESTESTEST')
+  #xtest <- 0 
+  #xtest2 <- 0 
+  #coeftests <- rep(0,m)
+  #phi1 <- 0.4 ; phi2 <- 0.1234
+  # coefreals <- c(cos(phi1), -sin(phi1), cos(phi2), -sin(phi2))
+  # for (j in seq(m)) xtest <- xtest + coefreals[j] * f[[j]]
+  # for (j in seq(m)) for (i in seq(j)) xtest2 <- xtest2 + S[j] * A[j,i] * f[[i]]
+  # for (j in seq(m)) for (i in seq(j)) coeftests[i] <- coeftests[i] + S[j] * A[j,i]
+  # print ((xtest - x[[1]])[seq(20)])
+  # print ('ENDTESTESTET1')
+  # print ((xtest2 - x[[1]])[seq(20)])
+  # print ('ENDTESTESTET2')
+  # print ("cofreals")
+  # print (coefreals)
+  # print ("coftests")
+  # print (coeftests)
+  
+  # donc: j'ai demontre que les deux xtests sont les memes
+  # coefreals est la bonne solution
+  # et je sais ussi que B = sum A_mj f_j
+  # donc je devroais simplement avour les Sj A_mj
+  
+
+  # at htis point I would like to make a littel check
+  # make A full
+  # is A Q t(A) = BtB orthonormal ? 
+  #print ('TEST')
+  #for (m in seq(2,2*nfreq)) for (j in seq(m-1)) A[j,m]=A[m,j]
+  #for (m in seq(2,2*nfreq)) for (j in seq(m-1)) Q[j,m]=Q[m,j]
+  #print (A*t(Q)*t(A))
+  print ('END TEST')
+
+  print (A) 
+  print (A %*% S)
   # amplitudes
   
-  for (m in seq(2*nfreq)){
-    if (!is.na(nu[m])) {
-    amp[m]=0;
-    for (j in seq(m)) amp[m] = amp[m] + A[m,j]*S[m]
+  mmax <- 2*nfreq
+  if (is.na(nu[mmax])) mmax <- mmax - 1
+
+  amp[1:mmax] = 0;
+  for (m in seq(mmax)) for (j in seq(m)) amp[j] <- amp[j] + S[m] * A[m,j]
+#   print ('ampp...')
+#   print (amp)
+
+  amp2m <- amp;
+
+  for (m in seq(mmax)){
     # if the perivous "m" was already of the same frequency, we can merge amplitudes and set phase
     if ((m > 1) && (nu[m-1] == -nu[m])){
-        print("phase computation")
-        print (c(m-1, m))
-        print (c(nu[m-1], nu[m]))
-        print (c(amp[m-1], amp[m]))
-        print("phase computation (2)")
         
         phase[m] <- Arg (-1i * amp[m] + amp[m-1])
         amp[m] <- sqrt(amp[m-1]^2 + amp[m]^2)
         print ("phase")
-        print (c(phase[m], amp[m]))
+        print (c(m, phase[m], amp[m], amp[m-1]))
         amp[m-1] <- NA
         phase[m-1] <- NA
     }
-    }
   }
+#   print ('amp2m')
+#   print (amp2m)
+#   print ('S')
+#   print (S)
+#   print ('PRod')
+#   print (Prod)
   
   # at this point we should have exactly nfreq non na values
   # we print a message if this is not right, and in that case I suspect some debugging will be needed. 
@@ -240,7 +299,12 @@ analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   nu <- -nu[valid_frequencies]
   amp <- amp[valid_frequencies]
   phase <- phase[valid_frequencies]
-  if (length(valid_frequencies) != nfreq) message (sprintf("something goes wrong : %i valid frequencies, and nfreq = %i"), valid_frequencies, nfreq)
+  if (length(valid_frequencies) != nfreq) message (sprintf("something goes wrong : %i valid frequencies, and nfreq = %i", valid_frequencies, nfreq))
+#   print ("nu")
+#   print(nu)
+#   print ("amp")
+#   print (amp)
+
   OUT = data.frame(nu=nu, amp=amp, phase=phase) 
   return(OUT)
 }
@@ -298,15 +362,15 @@ mfft_real_quatro <- function(xdata, nfreq=5, correction=1, fast=TRUE){
 
     for (j in seq(nfreq)){
        epsilon = OUT$amp[j] * Qprime(-2 * OUT$nu[j] * N2)*cos(2 * OUT$nu[j] * N2 + 2 * OUT$phase[j])
-       print ('epsilon')
-       print (c(epsilon,j, OUT$amp[j], OUT$nu[j], OUT$phase[j]))
+#        print ('epsilon')
+#        print (c(epsilon,j, OUT$amp[j], OUT$nu[j], OUT$phase[j]))
        if ((j+1) <= nfreq) { for (s in seq(j+1, nfreq)) {
         epsilon = epsilon + OUT$amp[s]  * 
          ( 
           Qprime( (OUT$nu[s] - OUT$nu[j])*N2)*cos((OUT$nu[j] - OUT$nu[s])*N2 + OUT$phase[j] - OUT$phase[s] ) -
           Qprime(( OUT$nu[s] + OUT$nu[j])*N2)*cos((OUT$nu[j] + OUT$nu[s])*N2 + OUT$phase[j] + OUT$phase[s] ) )
      }}
-    print(sprintf("j= %i, OUT$nu[j]= %.4f, OUT$amp[j] = %.4f", j, OUT$nu[j], OUT$amp[j]))   
+#     print(sprintf("j= %i, OUT$nu[j]= %.4f, OUT$amp[j] = %.4f", j, OUT$nu[j], OUT$amp[j]))   
     epsilon = epsilon / Qsecond0 / N2 / OUT$amp[j]
 
     OUT$nu[j] = OUT$nu[j] - epsilon

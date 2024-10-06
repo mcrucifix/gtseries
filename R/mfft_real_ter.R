@@ -30,8 +30,8 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
     sinp <- sin(fp)*Qp
     M <- 0.5 * matrix(c( 
             cosm + cosp , 
-           -sinm + sinp , 
             sinm + sinp , 
+            - sinm + sinp , 
             cosm - cosp ), 2 , 2 )
     return(M)
   }} else 
