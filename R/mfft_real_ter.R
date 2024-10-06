@@ -1,6 +1,6 @@
 
 Q <- function(wT) {sin(wT)/(wT)*(pi^2)/(pi^2-(wT)^2)}
-Qprime <- function(y) {pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2))}
+Qprime <- function(y) {ifelse(y==0, 0, pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2)))}
 Qsecond0 <- 2/pi^2 - 1./3. 
 
 analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){

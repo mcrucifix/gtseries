@@ -3,7 +3,7 @@ Q <- function(wT) {sin(wT)/(wT)*(pi^2)/(pi^2-(wT)^2)}
 Qprime <- function(y) {ifelse(y==0, 0, pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2)))}
 Qsecond0 <- 2/pi^2 - 1./3. 
 
-analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
+analyse_quatro <- function(xdata, nfreq, fast = TRUE, nu = NULL){
   
 
   # nu can be provided, in which case the frequencies
@@ -223,7 +223,7 @@ analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL){
         print (c(amp[m-1], amp[m]))
         print("phase computation (2)")
         
-        phase[m] <- atan(-amp[m]/amp[m-1])
+        phase[m] <- Arg (-1i * amp[m] + amp[m-1])
         amp[m] <- sqrt(amp[m-1]^2 + amp[m]^2)
         print ("phase")
         print (c(phase[m], amp[m]))
@@ -281,7 +281,7 @@ mfft_real_quatro <- function(xdata, nfreq=5, correction=1, fast=TRUE){
     dt = deltat(xdata)
     startx = stats::start(xdata)[1]
     N <- length(xdata)
-    OUT <- analyse(xdata, nfreq, fast)
+    OUT <- analyse_quatro(xdata, nfreq, fast)
 
 
     # correction  (methode 2)
@@ -290,7 +290,7 @@ mfft_real_quatro <- function(xdata, nfreq=5, correction=1, fast=TRUE){
    xdata_synthetic <- rep(0,N)
    t <- seq(N)-1
    for (i in seq(nfreq)) xdata_synthetic = xdata_synthetic + OUT$amp[i]*cos(OUT$nu[i]*t + OUT$phase[i])
-   OUT2 <- analyse(xdata_synthetic, nfreq, fast)
+   OUT2 <- analyse_quatro(xdata_synthetic, nfreq, fast)
    OUT$nu = OUT$nu + (OUT$nu - OUT2$nu)
    OUT$amp = OUT$amp + (OUT$amp - OUT2$amp)
    OUT$phase = OUT$phase + (OUT$phase - OUT2$phase)
@@ -306,11 +306,12 @@ mfft_real_quatro <- function(xdata, nfreq=5, correction=1, fast=TRUE){
           Qprime( (OUT$nu[s] - OUT$nu[j])*N2)*cos((OUT$nu[j] - OUT$nu[s])*N2 + OUT$phase[j] - OUT$phase[s] ) -
           Qprime(( OUT$nu[s] + OUT$nu[j])*N2)*cos((OUT$nu[j] + OUT$nu[s])*N2 + OUT$phase[j] + OUT$phase[s] ) )
      }}
+    print(sprintf("j= %i, OUT$nu[j]= %.4f, OUT$amp[j] = %.4f", j, OUT$nu[j], OUT$amp[j]))   
     epsilon = epsilon / Qsecond0 / N2 / OUT$amp[j]
 
     OUT$nu[j] = OUT$nu[j] - epsilon
     }
-    OUT <- analyse(xdata, nfreq, fast, nu = OUT$nu)
+    OUT <- analyse_quatro(xdata, nfreq, fast, nu = OUT$nu)
   }
 
   # account for tseries scaling (i.e. uses the vaue of deltat and start encoded
