@@ -681,7 +681,7 @@ double phisqr(double freq, double xdata[], double ydata[], size_t ndata)
   xphi = yphi = 0;
   
   phifun(&xphi, &yphi, freq, xdata, ydata, ndata);
-  
+  // printf ("xphi etc %.f %.f %.f %.f \n',  xphi, yphi, xphi*xphi + yphi*yphi"); //
   return xphi*xphi + yphi*yphi;
 }
 
@@ -1337,9 +1337,11 @@ double bracket_real(float *powsd, size_t ndata)
   maxj = 0;
   maxpow = 0;
  
+/*  printf("I am calling bracket real  %i \n", ndata);*/
 /* probe positive frequencies in priority */
 
   for(j=2;j<=ndata/2-2;j++)
+/*      printf ("powsd[%d]  %.g  \n ", j, powsd[j]);*/
     if(powsd[j] > powsd[j-1] && powsd[j] > powsd[j+1])
       if(powsd[j] > maxpow){ 
 	maxj = j;
@@ -1356,7 +1358,7 @@ double bracket_real(float *powsd, size_t ndata)
   if(maxpow == 0) printf("DFT has no maximum ...");
  
    freq = (maxj-1);
-   printf("freq = %i \n",freq);
+/*   printf("freq = %d \n",freq);*/
 /*  if(maxj < ndata/2 - 1) freq = -(maxj-1);  */
 /*  if(maxj > ndata/2 - 1) freq = -(maxj-ndata-1);*/
   return (TWOPI*freq / ndata);
@@ -1504,4 +1506,105 @@ free_dvector(xdata2,1,n);
 /*free_dvector(ydata2,1,n);*/
 
 }
+
+int fastgsec(double *localminfreq, double *localmaxfreq,  
+	 int *localndata, double *localxdata, double *localydata,  double *outfreq);
+
+int fastgsec(double *localminfreq, double *localmaxfreq,  
+	 int *localndata, double *localxdata, double *localydata, 
+   double *outfreq)  
+{
+  int nearfreqflag;
+  long j;
+  float *powsd;
+  double *xdata, *ydata, *x, *y;
+  double centerf, leftf, rightf;
+  double f, A, psi;
+
+  FILE *fp;
+
+  double minfreq = *localminfreq;
+  double maxfreq = *localmaxfreq;
+  size_t ndata = *localndata;
+ 
+  bool fastflag;
+
+  fastflag = isPowerofTwo(ndata) ;
+
+  if (fastflag)
+/*    (printf("ndata is power of two: we will be faster ! \n"));*/
+  if (ndata <= 2){
+    printf("at least 2 data needed - output non-reliable"); return(0);
+  }
+
+/*  printf("prelimarg %d, %zu %d", nfreq, ndata, flag);*/
+
+  /* ALLOCATION OF VARIABLES */
+
+/*  xdata = dvector(1,ndata);*/
+/*  ydata = dvector(1,ndata);*/
+  x = dvector(1,ndata);
+  y = dvector(1,ndata);
+
+  powsd = vector(1, ndata);
+  
+
+   xdata = localxdata -1;  // -1 because dvector vs *double
+   ydata = localydata -1;
+  
+    /* MULTIPLY THE SIGNAL BY A WINDOW FUNCTION, STORE RESULT IN x AND y */
+    window(x, y, xdata, ydata, ndata);
+    
+
+    /* COMPUTE POWER SPECTRAL DENSITY USING FAST FOURIER TRANSFORM */
+    power(powsd, x, y, ndata);
+
+
+      /* CHECK IF THE FREQUENCY IS IN THE REQUIRED RANGE */
+      while((centerf = bracket_real(powsd, ndata)) < minfreq || centerf > maxfreq) {
+
+	/* IF NO, SUBSTRACT IT FROM THE SIGNAL */
+	leftf = centerf - TWOPI / ndata;
+	rightf = centerf + TWOPI / ndata;
+	
+	f =  golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+	
+	amph(&A, &psi, f, x, y, ndata);
+	
+	for(j=1;j<=ndata;j++){
+	  xdata[j] -= A*cos( f*(j-1) + psi );
+	  ydata[j] -= A*sin( f*(j-1) + psi );
+	}
+
+	window(x, y, xdata, ydata, ndata);
+
+	power(powsd, x, y, ndata); 
+      }   
+
+
+    leftf = centerf - TWOPI / ndata;
+    rightf = centerf + TWOPI / ndata;
+
+    /* DETERMINE THE FIRST FREQUENCY */
+    f = golden(phisqr, leftf, centerf, rightf, x, y, ndata);
+    
+    *outfreq = f ; 
+
+    /* COMPUTE AMPLITUDE AND PHASE */
+    amph(&A, &psi, f, x, y, ndata);
+    
+    /* SUBSTRACT THE FIRST HARMONIC FROM THE SIGNAL */
+    for(j=1;j<=ndata;j++){
+      xdata[j] -= A*cos( f*(j-1) + psi );
+    }  
+
+  free_dvector(x, 1, ndata);
+  free_dvector(y, 1, ndata);
+  free_vector(powsd, 1, ndata);
+  
+
+  return 1;
+}
+
+
 

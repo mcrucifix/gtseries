@@ -1,7 +1,9 @@
 
-Q <- function(wT) {sin(wT)/(wT)*(pi^2)/(pi^2-(wT)^2)}
-Qprime <- function(y) {ifelse(y==0, 0, pi^2/(pi^2-y^2)/y*(cos(y)+(sin(y)/y)*(3*y^2-pi^2)/(pi^2-y^2)))}
-Qsecond0 <- 2/pi^2 - 1./3. 
+pisquare <- pi^2
+
+Q <- function(wT) {sin(wT)/(wT)*(pisquare)/(pisquare-(wT*wT))}
+Qprime <- function(y) {ifelse(y==0, 0, pisquare/(pisquare-y*y)/y*(cos(y)+(sin(y)/y)*(3*y*y-pisquare)/(pisquare-y*y)))}
+Qsecond0 <- 2/pisquare - 1./3. 
 
 mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, maxfreq=NULL){
   
@@ -63,27 +65,48 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
     # or either they were not provided, but we are in this case where it was set in "m-1" because
     # we identified a non-null frequency
     # in both configurations, we look at a frequency with the fourier transform
-    fbase <- freqs[which.max(power(hx))]
-    brackets <- c(fbase-pi/N, fbase+pi/N);
+     fbase <- freqs[which.max(power(hx))]
+     brackets <- c(fbase-pi/N, fbase+pi/N);
     # and then further corrects the brackets if minfreq and maxfreq where provided
-    brackets[1] <- max(minfreq, brackets[1])
-    brackets[2] <- max(maxfreq, brackets[1])
-    thx <- t(hx)
+     brackets[1] <- max(minfreq, brackets[1])
+     brackets[2] <- min(maxfreq, brackets[2])
+     thx <- t(hx)
     
     # after profiling, the fastest seems the first option below
     # this is the weak link
     # coding the function in c might be an option
     
-    fmax = cmna::goldsectmax(function(f) 
-                             {
-                              ft <- f*t
-                             (thx %*% cos(f*t))^2 + (thx %*% sin(f*t))^2}, 
-                             brackets[1], brackets[2], tol=1.e-10, m=9999)
-    
-   #  fmax = cmna::goldsectmax(function(f) {
-   #                           ft <- f*t
-   #                           (sum(hx * cos(ft)))^2 + (sum(hx %*% sin(ft)))^2}, 
-   #                           brackets[1], brackets[2], tol=1.e-10, m=9999)
+    #
+     tomax <-  function(t) {
+       function(f) {
+       ft <- f*t
+       a <- hx %*% cbind(cos(ft), sin(ft))
+       a[1]*a[1] + a[2]*a[2]
+     } 
+     }
+
+
+#     print ("x[[m]][1,2]")
+#     print (as.double(x[[m]][1:2]))
+
+    localxdata <- as.double(x[[m]])
+#     print ('call it')
+#    OUT <- .C("fastgsec", as.double(minfreq), as.double(maxfreq), 
+#              as.integer(N), localxdata , as.double(rep(0,N)), 
+#              outfreq = 0., DUP=TRUE)
+#     print ('called it')
+
+#     plot (Mod(fft(x[[m]])[0:(N/2)])^2 , type='l')
+
+   fmax = cmna::goldsectmax(tomax(t), 
+                            brackets[1], brackets[2],
+                            tol=1.e-10, m=9999)
+   
+
+    # fmax = cmna::goldsectmax(function(f) {
+    #                          ft <- f*t
+    #                          (sum(hx * cos(ft)))^2 + (sum(hx %*% sin(ft)))^2}, 
+    #                          brackets[1], brackets[2], tol=1.e-10, m=9999)
 
    #  fmax = cmna::goldsectmax(function(f) {
    #                           ft <- f*t
@@ -91,11 +114,15 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
    #                           brackets[1], brackets[2], tol=1.e-10, m=9999)
 
 
+    #print (sprintf("fmaxlocal: %.2f ; fmax with C: %.2f", 
+    #               fmax, OUT$outfreq))
+
+#    fmax <- OUT$outfreq
 
     if (fmax > freqs[2]/2){
       # if we really identified a frequency
       # we are in this case where the frequency was not a priori provided
-      # we se set this phase to zero, and the next one to pi/2, and also set the frequencies accordinly
+      # we se set this phase to zero, and the next one to pi/2, and also set the frequencies accordingly
     phase[m] <- 0.
     nu[m]  <- fmax
     phase[m+1] <- pi/2. 
@@ -190,13 +217,14 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 
     S[m] = 0. 
     for (j in seq(m))  S[m] = S[m] + Prod[j]*A[m,j]
+
     # for (j in seq(m))  S[m] = S[m] + A[m,j] * hprod(x[[1]], f[[j]])
 
     # les Sm sont les projections dans la nouvelle base
     # not necessary, for verification only
     # computes the B and verify they are orthonormal
-     B[[m]]=0
-     for (j in seq(m)) B[[m]] = B[[m]] + A[m,j] * f[[j]]
+    # B[[m]]=0
+    # for (j in seq(m)) B[[m]] = B[[m]] + A[m,j] * f[[j]]
 
 
     #print ('S[m] computed two different ways')
@@ -217,8 +245,8 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 
 
     x[[m+1]] = x[[m]]
-    # for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
-    x[[m+1]] = x[[m+1]] - S[m] * B[[m]]
+    for (j in seq(m))  x[[m+1]] = x[[m+1]] - S[m] * A[m,j]*f[[j]]
+    #x[[m+1]] = x[[m+1]] - S[m] * B[[m]]
 #     print('residu final')
 #     print(m)
 #     print (x[[m+1]][seq(20)])

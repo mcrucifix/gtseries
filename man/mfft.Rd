@@ -4,11 +4,13 @@
 \alias{mfft}
 \title{Modified Fourier transform}
 \usage{
-mfft(xdata, minfreq = NULL, maxfreq = NULL, correction = 1, nfreq = 30)
+mfft(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, correction = 1)
 }
 \arguments{
 \item{xdata}{The data provided either as a time series (advised), or as a vector. 
 may be complex}
+
+\item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
 
 \item{minfreq, maxfreq}{If provided, bracket the frequencies to be probed. Note this are
 more precisely angular velocities (2\pi / period), expressed in time-inverse units
@@ -21,8 +23,6 @@ The parameter is passed on to `mfft_real` or `mfft_complex` depending on
 quite the same for both. This needs to be fixed. 
 one approach would be to define scalars like 'fft', 'mfft', 'mfft_linear', 
 'mfft_second_order_correction'.}
-
-\item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
 }
 \value{
 a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
