@@ -5,7 +5,7 @@ Q <- function(wT) {sin(wT)/(wT)*(pisquare)/(pisquare-(wT*wT))}
 Qprime <- function(y) {ifelse(y==0, 0, pisquare/(pisquare-y*y)/y*(cos(y)+(sin(y)/y)*(3*y*y-pisquare)/(pisquare-y*y)))}
 Qsecond0 <- 2/pisquare - 1./3. 
 
-mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, maxfreq=NULL){
+mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, maxfreq=NULL, useCcode = TRUE){
   
   # nu can be provided, in which case the frequencies
   # are considered to be given
@@ -65,13 +65,16 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
     # or either they were not provided, but we are in this case where it was set in "m-1" because
     # we identified a non-null frequency
     # in both configurations, we look at a frequency with the fourier transform
-     fbase <- freqs[which.max(power(hx))]
-     brackets <- c(fbase-pi/N, fbase+pi/N);
-    # and then further corrects the brackets if minfreq and maxfreq where provided
-     brackets[1] <- max(minfreq, brackets[1])
-     brackets[2] <- min(maxfreq, brackets[2])
-     thx <- t(hx)
     
+      if (!useCcode) {
+
+       fbase <- freqs[which.max(power(hx))]
+       brackets <- c(fbase-pi/N, fbase+pi/N);
+       # and then further corrects the brackets if minfreq and maxfreq where provided
+       brackets[1] <- max(minfreq, brackets[1])
+       brackets[2] <- min(maxfreq, brackets[2])
+       thx <- t(hx)
+      
     # after profiling, the fastest seems the first option below
     # this is the weak link
     # coding the function in c might be an option
@@ -84,25 +87,10 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
        a[1]*a[1] + a[2]*a[2]
      } 
      }
-
-
-#     print ("x[[m]][1,2]")
-#     print (as.double(x[[m]][1:2]))
-
-    localxdata <- as.double(x[[m]])
-#     print ('call it')
-#    OUT <- .C("fastgsec", as.double(minfreq), as.double(maxfreq), 
-#              as.integer(N), localxdata , as.double(rep(0,N)), 
-#              outfreq = 0., DUP=TRUE)
-#     print ('called it')
-
-#     plot (Mod(fft(x[[m]])[0:(N/2)])^2 , type='l')
-
-   fmax = cmna::goldsectmax(tomax(t), 
+     fmax = cmna::goldsectmax(tomax(t), 
                             brackets[1], brackets[2],
                             tol=1.e-10, m=9999)
-   
-
+ 
     # fmax = cmna::goldsectmax(function(f) {
     #                          ft <- f*t
     #                          (sum(hx * cos(ft)))^2 + (sum(hx %*% sin(ft)))^2}, 
@@ -114,10 +102,23 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
    #                           brackets[1], brackets[2], tol=1.e-10, m=9999)
 
 
+
+
+      } else {
+#     print ("x[[m]][1,2]")
+#     print (as.double(x[[m]][1:2]))
+
+     localxdata <- as.double(x[[m]])
+     OUT <- .C("fastgsec", as.double(minfreq), as.double(maxfreq), 
+              as.integer(N), localxdata , as.double(rep(0,N)), 
+               outfreq = 0., DUP=TRUE)
+     fmax <- OUT$outfreq
+      }
+  
+
     #print (sprintf("fmaxlocal: %.2f ; fmax with C: %.2f", 
     #               fmax, OUT$outfreq))
 
-#    fmax <- OUT$outfreq
 
     if (fmax > freqs[2]/2){
       # if we really identified a frequency
