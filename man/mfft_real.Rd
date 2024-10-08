@@ -2,14 +2,33 @@
 % Please edit documentation in R/mfft_real.R
 \name{mfft_real}
 \alias{mfft_real}
-\title{Modified Fourier transform  for real series}
+\title{Frequency Modified Fourier transform  for real series}
 \usage{
-mfft_real(xdata, nfreq = 5, correction = TRUE)
+mfft_real(
+  xdata,
+  nfreq = 5,
+  minfreq = NULL,
+  maxfreq = NULL,
+  correction = 1,
+  fast = TRUE
+)
 }
 \arguments{
 \item{xdata}{The data provided either as a time series (advised), or as a vector.}
 
 \item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
+
+\item{minfreq, maxfreq}{If provided, bracket the frequencies to be probed. Note this are
+more precisely angular velocities (2\pi / period), expressed in time-inverse units
+with the time resolution encoded in `xdata` if the latter is a time series.}
+
+\item{fast}{(default = TRUE) uses analytical formulations for the crossproducts involving sines and cosines. 
+note: this is not really faster because the bottleneck is actually the goden section search. But more elegant.}
+
+\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data (both are documented in the Sidlichovsky and Nesvorny paper.}
+}
+\value{
+a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
 }
 \description{
 R-coded version of the Modified Fourier Transform
@@ -22,11 +41,9 @@ A C-version should be supplied one day.
 }
 \examples{
 
-set.seed(12413)
-t = seq(1024)
-x_orig = cos(t*0.13423167+0.00) + 1.3 * cos(t*0.119432+2.314) + 0.134994 + 0.4*cos(t*0.653167) + 0.11 * cos(t*0.78913498) + rnorm(1024)*0.12
-OUT <- mfft_real(x_orig)
-print(OUT)
+data(harmonic_sample)
+spectrum <- mfft_real(harmonic_sample$data)
+print(spectrum)
 
 }
 \references{

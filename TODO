@@ -1,8 +1,7 @@
-- make nicer graphs for mfft  <- in prgoress
-- finalise computations for mfft_real_ter (use notebook) <- seems to be ok forfrequenices
-- there still seems to be a bias on amplitudes that is not well corrected with the analytical methods, when there are several frequencies. As if the first components where eating a bit too much power. Not sure why, and not sure how to correct this. 
- But the bias is much less important with the complex version. So there must be a good mathematical reason that is not
- obvious to me (in mfft_complex not quite the same power goes in omega and -omega, so maybe the explanation is there ?)
-- use that one only; deprecate mfft_real
+- make nicer graphs for mfft  <- in progress
 - work on documentation
+- document data and add astronomical data (documentation has to be revised for harmonic and pseudo_log)
+- think more about the significance spectrum
+- revis the haar bit
+- revise the periodogram
 - and make a paper ! 
