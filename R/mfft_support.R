@@ -62,8 +62,8 @@ plot.mfft_deco <- function (M,periods=FALSE,labels=NULL,...){
   }
   points(abs(M$Freq), abs(M$Amp),'p',...)
   if (!is.null(labels)) {
-    yshift <- 0.2*range(M$Amp)
-    text(M$Freq, M$Amp + yshift, labels)
+    yshift <- 0.05*range(M$Amp)
+    text(M$Freq, M$Amp + yshift, labels, srt=90, pos=4)
   }
 }
 
