@@ -9,7 +9,7 @@
 \alias{print.mfft_deco}
 \title{MFFT reconstruction}
 \usage{
-reconstruct_mfft(M)
+reconstruct_mfft(M, sum = TRUE)
 
 mfft_anova(M)
 
@@ -20,6 +20,15 @@ mfft_anova(M)
 \method{lines}{mfft_deco}(M, ...)
 
 \method{print}{mfft_deco}(M, ...)
+}
+\arguments{
+\item{M}{: mfft_deco object}
+
+\item{sum}{: TRUE if user wants to sum components in the reconstruction}
+}
+\value{
+list of reconstructed components if sum=FALSE,  full
+        reconstructed time series otherwise
 }
 \description{
 MFFT reconstruction

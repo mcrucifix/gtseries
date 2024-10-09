@@ -1,12 +1,19 @@
 #' MFFT reconstruction
+#' @importFrom stats deltat start
 #' @rdname mfft_deco
+#' @param  M : mfft_deco object 
+#' @param  sum : TRUE if user wants to sum components in the reconstruction
 #' @export reconstruct_mfft
-reconstruct_mfft  <- function(M){
+#' @return list of reconstructed components if sum=FALSE,  full
+#'         reconstructed time series otherwise
+reconstruct_mfft  <- function(M, sum=TRUE){
  if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
- xdata <- attr(M,"xdata")
+ xdata <- attr(M,"data")
  nfreq <- attr(M,"nfreq")
- times <- seq(length(xdata))*dt(xdata) + startx(xdata)
- reconstructed <- lapply(seq(nfreq), function(i) M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]) )
+ times <- seq(length(xdata))*stats::deltat(xdata) + stats::start(xdata)[1]
+ reconstructed <- lapply(seq(nfreq), function(i) ts( M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]), start=stats::start(xdata), deltat=stats::deltat(xdata)) )
+
+ if ( sum ) reconstructed <- ts(apply(simplify2array(reconstructed), 1 , sum), start=stats::start(xdata), deltat=stats::deltat(xdata))
 }
 
 #' MFFT ANOVA

@@ -113,7 +113,7 @@ mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correctio
 
      attr(OUT,"class") <- "mfft_deco"
      attr(OUT,"nfreq") <- nfreq
-     attr(OUT,"xdata") <- xdata
+     attr(OUT,"data") <- xdata
 
      return(OUT)
 }
