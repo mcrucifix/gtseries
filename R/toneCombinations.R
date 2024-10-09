@@ -3,24 +3,17 @@
 #' Generates a vector with combinations of an input vector of frequencies, wih
 #' explicit label names, up to order 3 (this could be made more flexible is the future)
 #'
-#' @importFrom RcppAlgos
+#' @importFrom RcppAlgos comboGeneral
 #' @param omegas: vector of references frequencies, optionally with rownames, 
 #' @param keepPositives : if TRUE, then only keeps positive combinations of frequencies
 #' @return a vector with combination of tones and explicit rownames, using, if available, the
 #'         rownames provided in the input vector omega
 #' @author Michel Crucifix
+#' @export toneCombinations
 #' @examples
-# omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
-# outamps <- c(1., 2, 0.2 , 0.5, 0.5)
-# outfreqs <- c(1., 1.2432, omegas[1]+omegas[3]+0.00000002, omegas[1]-omegas[4]+0.00004, 0.15)
-# 
-# attributions <- attributeTones(outfreqs, omegas)
-# 
-# cbind(outfreqs, attributions)
-# 
-# plot(outfreqs, outamps, type='h')
-# text(outfreqs, outamps+0.1, attributions)
-# 
+#' omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
+#' print(toneCombinations(omegas))
+
 toneCombinations <- function(omegas, keepPositives=TRUE){
  twoomegas <- c(-omegas,omegas)
  indices  <- c(-seq(length(omegas)), seq(length(omegas)))
@@ -85,20 +78,21 @@ generate_name <- function(invec,char="s", labels = NULL){
 #' @param tol1 : acceptable tolerance for being considered as a certain attribution
 #'               (if several frequencies match the criteria, the closest will be taken)
 #' @param tol2 : acceptable tolerance for being considered as a likely or plausible
+#' @export attributeTones
 #'
 #' @examples
-# omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
-# names(omegas) <- c('g1','g2','s1','s2')
-# outamps <- c(1., 2, 0.2 , 0.5, 0.5)
-# outfreqs <- c(1., 1.2432, omegas[1]+omegas[3]+0.00000002, omegas[1]-omegas[4]+0.00004, 0.15)
-# 
-# attributions <- attributeTones(outfreqs, omegas)
-# 
-# cbind(outfreqs, attributions)
-# 
-# plot(outfreqs, outamps, type='h')
-# text(outfreqs, outamps+0.1, attributions)
-#
+#' omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
+#' names(omegas) <- c('g1','g2','s1','s2')
+#' outamps <- c(1., 2, 0.2 , 0.5, 0.5)
+#' outfreqs <- c(1., 1.2432, omegas[1]+omegas[3]+0.00000002, omegas[1]-omegas[4]+0.00004, 0.15)
+#' 
+#' attributions <- attributeTones(outfreqs, omegas)
+#' 
+#' cbind(outfreqs, attributions)
+#' 
+#' plot(outfreqs, outamps, type='h')
+#' text(outfreqs, outamps+0.1, attributions)
+#'
 attributeTones <- function(infreq , omegas, tol1 = 1.e-6, tol2 = 1.e-4) { 
   attributions <- rep("", length(infreq))
   combis <- toneCombinations(omegas)

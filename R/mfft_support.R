@@ -43,8 +43,11 @@ as.data.frame.mfft_deco <- function(x) {data.frame(Freq=x$Freq, Amp=x$Amp, Phase
 
 
 #' @rdname mfft_deco
+#' @param a `mfft_deco` object, typically the output of a `mfft` call. 
+#' @param labels to be set above the frequency peaks. Can be the output of `attributeTone`
+#' @param periods if TRUE will add a lower axis with period labels
 #' @export
-plot.mfft_deco <- function (M,periods=FALSE,...){
+plot.mfft_deco <- function (M,periods=FALSE,labels=NULL,...){
 #   O <- order(M$Freq)
   plot(abs(M$Freq), abs(M$Amp),'h',ylab="Amplitudes", xlab="",  ...)
   if (periods) {
@@ -58,6 +61,10 @@ plot.mfft_deco <- function (M,periods=FALSE,...){
     mtext("Rate", 1, 3)
   }
   points(abs(M$Freq), abs(M$Amp),'p',...)
+  if (!is.null(labels)) {
+    yshift <- 0.2*range(M$Amp)
+    text(M$Freq, M$Amp + yshift, labels)
+  }
 }
 
 #' @rdname mfft_deco
