@@ -15,7 +15,7 @@ mfft_anova(M)
 
 \method{as.data.frame}{mfft_deco}(x)
 
-\method{plot}{mfft_deco}(M, periods = FALSE, ...)
+\method{plot}{mfft_deco}(M, periods = FALSE, labels = NULL, ...)
 
 \method{lines}{mfft_deco}(M, ...)
 
@@ -25,6 +25,12 @@ mfft_anova(M)
 \item{M}{: mfft_deco object}
 
 \item{sum}{: TRUE if user wants to sum components in the reconstruction}
+
+\item{periods}{if TRUE will add a lower axis with period labels}
+
+\item{labels}{to be set above the frequency peaks. Can be the output of `attributeTone`}
+
+\item{a}{`mfft_deco` object, typically the output of a `mfft` call.}
 }
 \value{
 list of reconstructed components if sum=FALSE,  full

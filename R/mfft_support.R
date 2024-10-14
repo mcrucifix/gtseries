@@ -52,9 +52,9 @@ plot.mfft_deco <- function (M,periods=FALSE,labels=NULL,...){
   plot(abs(M$Freq), abs(M$Amp),'h',ylab="Amplitudes", xlab="",  ...)
   if (periods) {
     frequencies <- pretty(range(M$Freq/(2*pi)))
-    labels <- as.character(1/frequencies)
-    if (0 %in% frequencies) labels[which(frequencies == 0)] = "∞"
-    axis(1, line=3, at=2*pi*frequencies, labels=labels)
+    plabels <- as.character(1/frequencies)
+    if (0 %in% frequencies) plabels[which(frequencies == 0)] = "∞"
+    axis(1, line=3, at=2*pi*frequencies, labels=plabels)
     mtext("Rate", 1, 2)
     mtext("Period", 1, 4)
   } else {
@@ -62,8 +62,8 @@ plot.mfft_deco <- function (M,periods=FALSE,labels=NULL,...){
   }
   points(abs(M$Freq), abs(M$Amp),'p',...)
   if (!is.null(labels)) {
-    yshift <- 0.05*range(M$Amp)
-    text(M$Freq, M$Amp + yshift, labels, srt=90, pos=4)
+    yshift <- 0.05*diff(range(M$Amp))
+    text(M$Freq, M$Amp, labels, srt=90, , adj=-0.4)
   }
 }
 

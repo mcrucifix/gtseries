@@ -25,7 +25,8 @@ with the time resolution encoded in `xdata` if the latter is a time series.}
 \item{fast}{(default = TRUE) uses analytical formulations for the crossproducts involving sines and cosines. 
 note: this is not really faster because the bottleneck is actually the goden section search. But more elegant.}
 
-\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data (both are documented in the Sidlichovsky and Nesvorny paper.}
+\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)}
 }
 \value{
 a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".

@@ -337,7 +337,8 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 #' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note this are
 #'        more precisely angular velocities (2\pi / period), expressed in time-inverse units
 #'        with the time resolution encoded in `xdata` if the latter is a time series. 
-#' @param correction:  0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data (both are documented in the Sidlichovsky and Nesvorny paper. 
+#' @param correction:  0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+#' 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
 #' @param fast (default = TRUE) uses analytical formulations for the crossproducts involving sines and cosines. 
 #'        note: this is not really faster because the bottleneck is actually the goden section search. But more elegant. 
@@ -354,6 +355,8 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 #' @export mfft_real
 mfft_real <- function(xdata, nfreq=5,  minfreq=NULL, maxfreq=NULL, correction = 1 , fast=TRUE){
 
+
+  if (correction == 4) "this correction scheme is currently not implemented for real time series"
   N <- length(xdata)
   N2 <- N/2.
   xdata = stats::as.ts(xdata)
@@ -427,7 +430,7 @@ mfft_real <- function(xdata, nfreq=5,  minfreq=NULL, maxfreq=NULL, correction = 
 
     # rename for class compatibility
     names(OUT) <- c("Freq","Amp","Phases")
-    attr(OUT, "class") <- "mfft_deco"
+    class(OUT) <- c("mfft_deco", "data.frame")
     attr(OUT, "data")  <- xdata
     attr(OUT, "nfreq")  <- nfreq
     return(OUT)

@@ -21,7 +21,7 @@ explicit label names, up to order 3 (this could be made more flexible is the fut
 }
 \examples{
 omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
-print(toneCombinations(omegas)
+print(toneCombinations(omegas))
 }
 \author{
 Michel Crucifix

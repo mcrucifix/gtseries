@@ -4,7 +4,14 @@
 \alias{mfft}
 \title{Modified Fourier transform}
 \usage{
-mfft(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, correction = 1)
+mfft(
+  xdata,
+  nfreq = 15,
+  minfreq = NULL,
+  maxfreq = NULL,
+  correction = 1,
+  force_complex = FALSE
+)
 }
 \arguments{
 \item{xdata}{The data provided either as a time series (advised), or as a vector. 
@@ -17,12 +24,11 @@ more precisely angular velocities (2\pi / period), expressed in time-inverse uni
 with the time resolution encoded in `xdata` if the latter is a time series. 
 The computed frequencies are in the range given by minfreq and maxfreq.}
 
-\item{correction}{:
-The parameter is passed on to `mfft_real` or `mfft_complex` depending on
-`xdata` is real or complex, but the meaning of the parameter is not
-quite the same for both. This needs to be fixed. 
-one approach would be to define scalars like 'fft', 'mfft', 'mfft_linear', 
-'mfft_second_order_correction'.}
+\item{force_complex}{: use the complex number implementation even if the time series is real.}
+
+\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference). Note: 1 is not implemented for complex time series; 4 is
+not documented for real time series}
 }
 \value{
 a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
@@ -38,9 +44,6 @@ by M. Crucifix when the input signal is real.
 `mfft` is a wrapper thar redirects the data
 to `mfft_real` or `mfft_complex` depending on the nature of
 the input data. 
-TODO: this needs more work  because the two routines
-do not yet take exactly the same inputs. In particular, the meaning
-the `correction` parameter is not the same 
 TODO: add Laskar reference and say that the correction=0 version
       corresponds to Laskar's routine.
 }

@@ -9,9 +9,6 @@
 #' `mfft` is a wrapper thar redirects the data
 #' to `mfft_real` or `mfft_complex` depending on the nature of
 #' the input data. 
-#' TODO: this needs more work  because the two routines
-#' do not yet take exactly the same inputs. In particular, the meaning
-#' the `correction` parameter is not the same 
 #' TODO: add Laskar reference and say that the correction=0 version
 #'       corresponds to Laskar's routine.
 #' @param xdata The data provided either as a time series (advised), or as a vector. 
@@ -20,20 +17,19 @@
 #'        more precisely angular velocities (2\pi / period), expressed in time-inverse units
 #'        with the time resolution encoded in `xdata` if the latter is a time series. 
 #'        The computed frequencies are in the range given by minfreq and maxfreq.
-#' @param correction :
-#'        The parameter is passed on to `mfft_real` or `mfft_complex` depending on
-#'        `xdata` is real or complex, but the meaning of the parameter is not
-#'        quite the same for both. This needs to be fixed. 
-#'        one approach would be to define scalars like 'fft', 'mfft', 'mfft_linear', 
-#'        'mfft_second_order_correction'. 
+#' @param correction:  0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+#' 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference). Note: 1 is not implemented for complex time series; 4 is
+#' not documented for real time series
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
+#' @param force_complex : use the complex number implementation even if the time series is real. 
 #' @return a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
 #'         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 #'         Frequency Modified Fourier transform  for Complex Numbers
 #' \insertRef{sidlichovsky97aa}{gtseries}
-mfft <- function(xdata, nfreq=30, minfreq=NULL, maxfreq=NULL, correction=1) {
-  if (is.complex(xdata)) return(mfft_complex(xdata, nfreq, minfreq, maxfreq, correction)) else 
+#' @export mfft
+mfft <- function(xdata, nfreq=15, minfreq=NULL, maxfreq=NULL, correction=1, force_complex = FALSE) {
+  if (is.complex(xdata) || force_complex) return(mfft_complex(xdata, nfreq, minfreq, maxfreq, correction)) else 
                          return(mfft_real(xdata, nfreq, minfreq, maxfreq, correction)) 
 }
 
@@ -76,10 +72,8 @@ mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correctio
   xdata <- Re(xdata)
   ndata <- length(xdata);
 
-  flag <- correction + 1  # this is an ugly translation towards Sidlichovsky's convention
-
-  if (!(flag == 1 || flag == 2 || flag == 3)) stop("flag must be either 1, 2, or 3")
-
+  flag <- c(1,'NA',2,3)[correction+1]
+  if (is.na(flag)) stop('this correction scheme is not implemented for complex time series')
 
     if (is.null(minfreq)){
      my_minfreq <- -pi
@@ -108,20 +102,14 @@ mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correctio
 
      # if this is input is a  real vector, there will be positive and negative frequencies 
      # corresponding to the same amplitude
-     # however, better use mfft_real in this case
      OUT <- data.frame(Freq=Freq, Amp=Ampl, Phases=Phase)
 
-     attr(OUT,"class") <- "mfft_deco"
+     class(OUT) <- c("mfft_deco", "data.frame")
      attr(OUT,"nfreq") <- nfreq
      attr(OUT,"data") <- xdata
 
      return(OUT)
 }
-
-
-
-
-#
 
 #
 #                         return(OUTVEC)
