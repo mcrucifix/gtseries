@@ -6,6 +6,7 @@
 #' @importFrom RcppAlgos comboGeneral
 #' @param omegas: vector of references frequencies, optionally with rownames, 
 #' @param keepPositives : if TRUE, then only keeps positive combinations of frequencies
+#' @param fractions : defaults 1. Set 2 to include double-periods, and 3 triple-periods. 
 #' @return a vector with combination of tones and explicit rownames, using, if available, the
 #'         rownames provided in the input vector omega
 #' @author Michel Crucifix
@@ -14,7 +15,24 @@
 #' omegas <- c( 0.123, 0.14312, 0.33251, 0.554313)
 #' print(toneCombinations(omegas))
 
-toneCombinations <- function(omegas, keepPositives=TRUE){
+toneCombinations <- function(omegas, fractions=1, keepPositives=TRUE){
+ if (fractions == 2){
+   local({
+   tmp <- c(as.numeric(omegas), as.numeric(omegas)/2)
+   names(tmp) <- c(names(omegas), sprintf("%s/2", names(omegas)))
+   omegas <<- tmp
+   })
+ }
+
+ if (fractions == 3){
+   local({
+   tmp <- c(as.numeric(omegas), as.numeric(omegas)/2, as.numeric(omegas)/3)
+   names(tmp) <- c(names(omegas), sprintf("%s/2", names(omegas)), sprintf("%s/3", names(omegas)))
+   omegas <<- tmp
+   })
+ }
+
+
  twoomegas <- c(-omegas,omegas)
  indices  <- c(-seq(length(omegas)), seq(length(omegas)))
  result = rbind(
@@ -75,6 +93,7 @@ generate_name <- function(invec,char="s", labels = NULL){
 #' 
 #' @param infreq : input frequencies
 #' @param omegas : reference frequencies (a numeric vector which may contain explicit row names)
+#' @param fractions : 1, 2, or 3 depending on willing to include singe, double or triple periods
 #' @param tol1 : acceptable tolerance for being considered as a certain attribution
 #'               (if several frequencies match the criteria, the closest will be taken)
 #' @param tol2 : acceptable tolerance for being considered as a likely or plausible
@@ -93,9 +112,9 @@ generate_name <- function(invec,char="s", labels = NULL){
 #' plot(outfreqs, outamps, type='h')
 #' text(outfreqs, outamps+0.1, attributions)
 #'
-attributeTones <- function(infreq , omegas, tol1 = 1.e-6, tol2 = 1.e-4) { 
+attributeTones <- function(infreq , omegas, fractions=1, tol1 = 1.e-6, tol2 = 1.e-4) { 
   attributions <- rep("", length(infreq))
-  combis <- toneCombinations(omegas)
+  combis <- toneCombinations(omegas, fractions=fractions)
   for (i in seq(infreq)){
     deltas <- abs(infreq[i] - combis)
     bestSuspect <- which.min(abs(infreq[i] - combis))

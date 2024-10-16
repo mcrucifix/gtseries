@@ -4,12 +4,14 @@
 \alias{attributeTones}
 \title{Attribution of combination of tones}
 \usage{
-attributeTones(infreq, omegas, tol1 = 1e-06, tol2 = 1e-04)
+attributeTones(infreq, omegas, fractions = 1, tol1 = 1e-06, tol2 = 1e-04)
 }
 \arguments{
 \item{infreq}{: input frequencies}
 
 \item{omegas}{: reference frequencies (a numeric vector which may contain explicit row names)}
+
+\item{fractions}{: 1, 2, or 3 depending on willing to include singe, double or triple periods}
 
 \item{tol1}{: acceptable tolerance for being considered as a certain attribution
 (if several frequencies match the criteria, the closest will be taken)}

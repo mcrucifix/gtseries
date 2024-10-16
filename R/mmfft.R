@@ -26,6 +26,7 @@ mmfft <- function(xdata, seglength = length(xdata) %/% 16, ...){
 }
   
 #' @rdname mmfft
+#' @export
 plot.mmfft <- function(x){
   freqrange <- 
     c(min(sapply(x, function(xs) min(xs$Freq))), 
@@ -35,7 +36,6 @@ plot.mmfft <- function(x){
     c(min(sapply(x, function(xs) min(xs$Amp))), 
       max(sapply(x, function(xs) max(xs$Amp))))
 
-  print(amprange)
   amp2lwd <- function(amp){ 3*amp/amprange[2] }
 
   length <- attr(x, "nsections") * 
@@ -48,25 +48,17 @@ plot.mmfft <- function(x){
   tstart <- attr(x,"start")
   tend   <- tstart  + nsec * tsec
 
-  print(freqrange)
-  print(c(tstart, tend))
   plot(c(tstart, tend), freqrange, type='n', xlab='Time', ylab='Rate')
  
   for (iseq in seq(nsec)){
     trange <- tstart + c(iseq-1,iseq)*tsec
     obj <- x[[iseq]]
     nfreq <- length(obj$Freq)
-    print(obj$Amp)
     lwds <- sapply(obj$Amp, amp2lwd)
-    print(lwds)
     for (j in seq(nfreq)){
       lines(trange, rep(obj$Freq[j],2), lwd=lwds[j])
     }
   }
 
 }
-
-
-
-
 
