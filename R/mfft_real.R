@@ -342,15 +342,15 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
 #' @param fast (default = TRUE) uses analytical formulations for the crossproducts involving sines and cosines. 
 #'        note: this is not really faster because the bottleneck is actually the goden section search. But more elegant. 
-#' @return a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
+#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
 #' @author Michel Crucifix
 #' @references
 #' \insertRef{sidlichovsky97aa}{gtseries}
 #' @examples
 #' 
 #' data(harmonic_sample)
-#' spectrum <- mfft_real(harmonic_sample$data)
-#' print(spectrum)
+#' spec <- mfft_real(harmonic_sample$data)
+#' print(spec)
 #'
 #' @export mfft_real
 mfft_real <- function(xdata, nfreq=5,  minfreq=NULL, maxfreq=NULL, correction = 1 , fast=TRUE){
@@ -430,7 +430,7 @@ mfft_real <- function(xdata, nfreq=5,  minfreq=NULL, maxfreq=NULL, correction = 
 
     # rename for class compatibility
     names(OUT) <- c("Freq","Amp","Phases")
-    class(OUT) <- c("mfft_deco", "data.frame")
+    class(OUT) <- c("discreteSpectrum", "data.frame")
     attr(OUT, "data")  <- xdata
     attr(OUT, "nfreq")  <- nfreq
     return(OUT)

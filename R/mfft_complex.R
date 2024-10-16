@@ -22,7 +22,7 @@
 #' not documented for real time series
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
 #' @param force_complex : use the complex number implementation even if the time series is real. 
-#' @return a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
+#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
 #'         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 #'         Frequency Modified Fourier transform  for Complex Numbers
@@ -56,7 +56,7 @@ mfft <- function(xdata, nfreq=15, minfreq=NULL, maxfreq=NULL, correction=1, forc
 #' the third algorithm should be in general much more precise).  
 #' The computed frequencies are in the range given by minfreq and maxfreq.
 #' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
-#' @return a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
+#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
 #'         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 #' actual computations
@@ -104,7 +104,7 @@ mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correctio
      # corresponding to the same amplitude
      OUT <- data.frame(Freq=Freq, Amp=Ampl, Phases=Phase)
 
-     class(OUT) <- c("mfft_deco", "data.frame")
+     class(OUT) <- c("discreteSpectrum", "data.frame")
      attr(OUT,"nfreq") <- nfreq
      attr(OUT,"data") <- xdata
 
