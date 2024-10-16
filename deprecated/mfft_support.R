@@ -1,4 +1,4 @@
-#' MFFT reconstruction
+#' Discrete spectrum reconstruction
 #' @importFrom stats deltat start
 #' @param  M : discreteSpectrum object 
 #' @param  times: if supplied, times of the decomposition
