@@ -13,10 +13,10 @@ pseudo_log_spectrum <- list(
   Phases = c(0, 2.314, 0, 0.653167, 0))
 
 
-attr(pseudo_log_spectrum,"class") <- 'mfft_deco'
+class(pseudo_log_spectrum) <- 'discreteSpectrum'
 
-pseudo_log$data <- pseudo_log_data
-pseudo_log$spectrum <- pseudo_log_spectrum
+pseudo_log_spectrum <- pseudo_log_spectrum
+attr(pseudo_log,"data")  <- pseudo_log_data
 
 
 usethis::use_data(pseudo_log, overwrite = TRUE)

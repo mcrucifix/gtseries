@@ -10,12 +10,10 @@ harmonic_sample_spectrum <- list(
   Freq = c(0.13423167, 0.119432, 0, 0.653167, 0.78913498),
   Phases = c(0, 2.314, 0, 0.653167, 0))
 
-attr(harmonic_sample_spectrum,"class") <- 'mfft_deco'
+class(harmonic_sample_spectrum) <- 'discreteSpectrum'
 
-harmonic_sample_noisy$data <- harmonic_sample_data
-harmonic_sample_noisy$spectrum <- harmonic_sample_spectrum
-
-
+harmonic_sample_noisy <- harmonic_sample_spectrum
+attr(harmonic_sample_noisy,"data") <- harmonic_sample_data
 
 usethis::use_data(harmonic_sample_noisy, overwrite = TRUE)
 
@@ -29,10 +27,9 @@ harmonic_sample_spectrum <- list(
   Freq = c(0.13423167, 0.119432, 0, 0.653167, 0.78913498),
   Phases = c(0, 2.314, 0, 0.653167, 0))
 
-attr(harmonic_sample_spectrum,"class") <- 'mfft_deco'
+class(harmonic_sample_spectrum) <- 'discreteSpectrum'
 
-harmonic_sample$data <- harmonic_sample_data
-harmonic_sample$spectrum <- harmonic_sample_spectrum
-
+harmonic_sample <- harmonic_sample_spectrum
+attr(harmonic_sample,"data") <- harmonic_sample_data
 
 usethis::use_data(harmonic_sample, overwrite = TRUE)

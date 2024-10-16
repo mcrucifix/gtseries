@@ -25,7 +25,7 @@ the third algorithm should be in general much more precise).
 The computed frequencies are in the range given by minfreq and maxfreq.}
 }
 \value{
-a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
+a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
 }
 \description{

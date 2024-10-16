@@ -29,7 +29,7 @@ note: this is not really faster because the bottleneck is actually the goden sec
 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)}
 }
 \value{
-a `mfft_deco` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
 }
 \description{
 R-coded version of the Modified Fourier Transform
@@ -43,8 +43,8 @@ A C-version should be supplied one day.
 \examples{
 
 data(harmonic_sample)
-spectrum <- mfft_real(harmonic_sample$data)
-print(spectrum)
+spec <- mfft_real(harmonic_sample$data)
+print(spec)
 
 }
 \references{
