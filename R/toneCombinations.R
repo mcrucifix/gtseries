@@ -94,9 +94,11 @@ generate_name <- function(invec,char="s", labels = NULL){
 #' @param infreq : input frequencies
 #' @param omegas : reference frequencies (a numeric vector which may contain explicit row names)
 #' @param fractions : 1, 2, or 3 depending on willing to include singe, double or triple periods
+#' @param keepPositives : argument passed to `toneCombinations`
 #' @param tol1 : acceptable tolerance for being considered as a certain attribution
 #'               (if several frequencies match the criteria, the closest will be taken)
 #' @param tol2 : acceptable tolerance for being considered as a likely or plausible
+#' @seealso toneCombinations
 #' @export attributeTones
 #'
 #' @examples
@@ -112,9 +114,9 @@ generate_name <- function(invec,char="s", labels = NULL){
 #' plot(outfreqs, outamps, type='h')
 #' text(outfreqs, outamps+0.1, attributions)
 #'
-attributeTones <- function(infreq , omegas, fractions=1, tol1 = 1.e-6, tol2 = 1.e-4) { 
+attributeTones <- function(infreq , omegas, fractions=1, tol1 = 1.e-6, tol2 = 1.e-4, keepPositives=TRUE) { 
   attributions <- rep("", length(infreq))
-  combis <- toneCombinations(omegas, fractions=fractions)
+  combis <- toneCombinations(omegas, fractions=fractions, keepPositives)
   for (i in seq(infreq)){
     deltas <- abs(infreq[i] - combis)
     bestSuspect <- which.min(abs(infreq[i] - combis))

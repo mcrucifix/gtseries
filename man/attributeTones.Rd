@@ -4,7 +4,14 @@
 \alias{attributeTones}
 \title{Attribution of combination of tones}
 \usage{
-attributeTones(infreq, omegas, fractions = 1, tol1 = 1e-06, tol2 = 1e-04)
+attributeTones(
+  infreq,
+  omegas,
+  fractions = 1,
+  tol1 = 1e-06,
+  tol2 = 1e-04,
+  keepPositives = TRUE
+)
 }
 \arguments{
 \item{infreq}{: input frequencies}
@@ -17,6 +24,8 @@ attributeTones(infreq, omegas, fractions = 1, tol1 = 1e-06, tol2 = 1e-04)
 (if several frequencies match the criteria, the closest will be taken)}
 
 \item{tol2}{: acceptable tolerance for being considered as a likely or plausible}
+
+\item{keepPositives}{: argument passed to `toneCombinations`}
 }
 \description{
 Based on a vector of frequencies (`infreq`), and a vector of referenc
@@ -36,4 +45,7 @@ cbind(outfreqs, attributions)
 plot(outfreqs, outamps, type='h')
 text(outfreqs, outamps+0.1, attributions)
 
+}
+\seealso{
+toneCombinations
 }
