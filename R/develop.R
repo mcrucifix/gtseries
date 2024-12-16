@@ -32,15 +32,21 @@ cis <- function(x) exp(1i*x)
 #'         reconstructed time series otherwise
 #' @method develop discreteSpectrum
 #' @export
-develop.discreteSpectrum  <- function(M, start=NULL, end=NULL, deltat=NULL, times,  dfunction = cos, sum=TRUE){
+develop.discreteSpectrum  <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL,  dfunction = cos, maxfreq = NULL, sum=TRUE){
  if (!("discreteSpectrum" %in% class(M))) stop ("object is not a discreteSpectrum decomposition")
 
  timesIsATseries = FALSE
+ if (is.ts(times)){
+   start = start(times)
+   deltat= deltat(times)
+   end = start + length(times)*deltat
+   timesIsATseries <- TRUE
+ }
  if (!is.null(start)){
    if (is.null(deltat) || is.null(end)) stop ("if you supply start, you must also supply deltat and end");
-   n <- (end-start) %*% deltat
-   times <- start + seq(0, n) * deltat
-   timesIsATseries = TRUE
+   n <- (end-start) %/% deltat
+   times <- ts(start + seq(0, n) * deltat, start=start, deltat=deltat)
+   timesIsATseries <-  TRUE
  }
 
  if (is.null(times)){
@@ -49,19 +55,29 @@ develop.discreteSpectrum  <- function(M, start=NULL, end=NULL, deltat=NULL, time
  start <- stats::start(xdata)[1]
  deltat <- stats::deltat(xdata)
  times <- (seq(length(xdata))-1) * deltat + start
- timesIsATseries = TRUE
+ timesIsATseries <- TRUE
  }
 
  nfreq <- attr(M,"nfreq")
  if (is.null(nfreq)) nfreq <- length(M$Amp)
+ if (!is.null(maxfreq)) nfreq <- min(nfreq, maxfreq) 
+
  if (timesIsATseries){
    reconstructed <- lapply(seq(nfreq), function(i) ts( M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]), start=start, deltat=deltat) )} 
  else {
-   reconstructed <- lapply(seq(nfreq), function(i) M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]))
+ reconstructed <- sapply(seq(nfreq), function(i) M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]) )
  }
 
- if ( sum ) reconstructed <- apply(simplify2array(reconstructed), 1 , sum)
- if (timesIsATseries) reconstructed <- ts(reconstructed, start=start, deltat=deltat)
+if ( sum ) { 
+   shift <- attr(M, "shift"); if (is.null (shift)) shift = 0
+   trend <- attr(M, "trend"); if (is.null (trend)) trend = 0
+   if (timesIsATseries) 
+     reconstructed <- Reduce('+', reconstructed)  + trend * times + shift 
+   else
+     reconstructed <- apply(reconstructed, 1 , sum)  + trend * times + shift
+ } else if (timesIsATseries) { 
+   reconstructed <- apply(reconstructed, 2, function(x) ts(x,start=start, deltat=deltat)) 
+} 
  return(reconstructed)
 }
 

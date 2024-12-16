@@ -272,7 +272,7 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
   # print (coeftests)
   
   # donc: j'ai demontre que les deux xtests sont les memes
-  # coefreals est la bonne solution
+
   # et je sais ussi que B = sum A_mj f_j
   # donc je devroais simplement avour les Sj A_mj
   

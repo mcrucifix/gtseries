@@ -72,8 +72,13 @@ mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correctio
   xdata <- Re(xdata)
   ndata <- length(xdata);
 
-  flag <- c(1,'NA',2,3)[correction+1]
-  if (is.na(flag)) stop('this correction scheme is not implemented for complex time series')
+  flag <- c(1,0, 2,3)[correction+1]
+  print ('flag')
+  print (flag)
+  if (flag==0) {
+    message ('this correction scheme is not implemented for complex time series \\ will use synthetic data correction instead')
+ flag = 2
+  }
 
     if (is.null(minfreq)){
      my_minfreq <- -pi
