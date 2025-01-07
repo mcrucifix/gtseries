@@ -25,6 +25,7 @@ cis <- function(x) exp(1i*x)
 #'         be supplied as well
 #' @param  deltat : see start. 
 #' @param  sum : TRUE if user wants to sum components %in% the reconstruction
+#' @param  trendshift : TRUE if user wants to account for trend and shift encoded in the discreteSpectrum object
 #' @param  dfunction is the trigonometrical function. Classically one of 'cos', 'sin', or 'cis'
 #' @note   if none if times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
 #'         which must then be present. If no `xdata` is availble, return an error. 
@@ -32,7 +33,7 @@ cis <- function(x) exp(1i*x)
 #'         reconstructed time series otherwise
 #' @method develop discreteSpectrum
 #' @export
-develop.discreteSpectrum  <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL,  dfunction = cos, maxfreq = NULL, sum=TRUE){
+develop.discreteSpectrum  <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL,  dfunction = cos, maxfreq = NULL, sum=TRUE, trendshift = TRUE){
  if (!("discreteSpectrum" %in% class(M))) stop ("object is not a discreteSpectrum decomposition")
 
  timesIsATseries = FALSE
@@ -71,6 +72,7 @@ develop.discreteSpectrum  <- function(M, start = NULL, end = NULL, deltat = NULL
 if ( sum ) { 
    shift <- attr(M, "shift"); if (is.null (shift)) shift = 0
    trend <- attr(M, "trend"); if (is.null (trend)) trend = 0
+   if (!(trendshift)) { shift = 0; trend = 0 }
    if (timesIsATseries) 
      reconstructed <- Reduce('+', reconstructed)  + trend * times + shift 
    else
@@ -123,7 +125,9 @@ lines.discreteSpectrum <- function (M,...){
 #' @rdname discreteSpectrum
 #' @export
 print.discreteSpectrum <- function (M,...){
-  print.data.frame(cbind(as.data.frame(M), Period=2*pi/M$Freq))
+  N <- nrows(as.data.frame(M))
+  print.data.frame(cbind(as.data.frame(M[:,min(10,N)]), Period=2*pi/M$Freq))
+  if (N > 10) print(sprintf("... + %d other rows \n", N-10))
 }
 
 
