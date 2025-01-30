@@ -125,8 +125,8 @@ lines.discreteSpectrum <- function (M,...){
 #' @rdname discreteSpectrum
 #' @export
 print.discreteSpectrum <- function (M,...){
-  N <- nrows(as.data.frame(M))
-  print.data.frame(cbind(as.data.frame(M[:,min(10,N)]), Period=2*pi/M$Freq))
+  N <- nrow(as.data.frame(M))
+  print.data.frame(cbind(as.data.frame(M[min(10,N),]), Period=2*pi/M$Freq))
   if (N > 10) print(sprintf("... + %d other rows \n", N-10))
 }
 
