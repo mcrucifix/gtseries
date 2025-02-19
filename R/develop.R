@@ -64,8 +64,8 @@ develop.discreteSpectrum  <- function(M, start = NULL, end = NULL, deltat = NULL
  if (!is.null(maxfreq)) nfreq <- min(nfreq, maxfreq) 
 
  if (timesIsATseries){
-   reconstructed <- lapply(seq(nfreq), function(i) ts( M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]), start=start, deltat=deltat) )} 
- else {
+   reconstructed <- lapply(seq(nfreq), function(i) ts( M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]), start=start, deltat=deltat) )
+ } else {
  reconstructed <- sapply(seq(nfreq), function(i) M$Amp[i] * dfunction(M$Freq[i] * times + M$Phase[i]) )
  }
 
@@ -78,11 +78,12 @@ if ( sum ) {
    else
      reconstructed <- apply(reconstructed, 1 , sum)  + trend * times + shift
  } else if (timesIsATseries) { 
-   reconstructed <- apply(reconstructed, 2, function(x) ts(x,start=start, deltat=deltat)) 
+   reconstructed <- lapply(reconstructed, function(x) ts(x,start=start, deltat=deltat)) 
 } 
  return(reconstructed)
 }
 
+#' Discrete spectrum class
 #' @rdname discreteSpectrum
 #' @export
 as.data.frame.discreteSpectrum <- function(x) {data.frame(Freq=x$Freq, Amp=x$Amp, Phases=x$Phases)}
@@ -125,8 +126,9 @@ lines.discreteSpectrum <- function (M,...){
 #' @rdname discreteSpectrum
 #' @export
 print.discreteSpectrum <- function (M,...){
-  N <- nrows(as.data.frame(M))
-  print.data.frame(cbind(as.data.frame(M[:,min(10,N)]), Period=2*pi/M$Freq))
+  N <- nrow(as.data.frame(M))
+  to_print <- seq(min(10,N))
+  print.data.frame(cbind(as.data.frame(M)[to_print, ], Period=2*pi/M$Freq[to_print]))
   if (N > 10) print(sprintf("... + %d other rows \n", N-10))
 }
 

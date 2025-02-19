@@ -2,8 +2,8 @@ Package: gtseries
 Encoding: UTF-8
 Type: Package
 Title: Time Series Analysis for Paleoclimate and Cyclostratigraphy Purposes
-Version: 1.05
-Date: 2023-12-15
+Version: 1.3
+Date: 2025-02-19
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
 Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: Collection of time series analysis tools, focused on spectral decomposition and reconstruction, with an original focus on astronomical theory of paleoclimates and cyclostratigraphy. 
