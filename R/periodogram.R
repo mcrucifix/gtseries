@@ -16,16 +16,16 @@ periodogram <- function(xdata){
   N2 <- ceiling(N/2)
   freqs <- ((seq(N)-1)/dt/N)[0:N2]
   f <-  fft(xdata)[0:N2]
-  Power <- Mod(f)^2
+  Power <- Mod(f)^2 / (dt*N2)^2
   Phase <- Arg(f)
-  out <- list(Freq=freqs, Power=Power, Phase=Phase)
+  OUT <- list(Freq=freqs, Power=Power, Phase=Phase)
   attr(OUT, "class") = "periodogram"
   return(OUT)
 }
 
 #' @rdname periodogram
 #' @export
-plot.periodogram <- function(X,...){
-  plot(X$Freq, X$Mod, type='l', log='xy',...)
+plot.periodogram <- function(X,log='xy', xlabel= "Frequency", ylabel="Power density", ...){
+  plot(X$Freq, X$Power, type='l', log=log,xlabel=xlabel, ylabel=ylabel, ...)
 }
 
