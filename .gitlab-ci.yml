@@ -37,7 +37,7 @@ build-job:
   stage: build
   script:
     # install
-    - R -e 'devtools::install()
+    - R -e 'devtools::install()'
     
 release:
   stage: release
