@@ -38,6 +38,10 @@ build-job:
   script:
     # install
     - R -e 'devtools::install()'
+  artifacts:
+    paths:
+      - "*.tar.gz"
+
     
 release:
   stage: release
