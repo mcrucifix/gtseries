@@ -58,4 +58,4 @@ release:
           link_type: package
   artifacts:
     paths:
-      - "*.tar.gz"'
+      - "*.tar.gz"
