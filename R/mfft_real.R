@@ -349,7 +349,8 @@ mfft_analyse <- function(xdata, nfreq, fast = TRUE, nu = NULL, minfreq=NULL, max
 #' @examples
 #' 
 #' data(harmonic_sample)
-#' spec <- mfft_real(harmonic_sample$data)
+#' data_to_analyse <- develop(harmonic_sample)
+#' spec <- mfft_real(data_to_analyse)
 #' print(spec)
 #'
 #' @export mfft_real

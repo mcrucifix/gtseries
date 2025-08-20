@@ -43,7 +43,8 @@ A C-version should be supplied one day.
 \examples{
 
 data(harmonic_sample)
-spec <- mfft_real(harmonic_sample$data)
+data_to_analyse <- develop(harmonic_sample)
+spec <- mfft_real(data_to_analyse)
 print(spec)
 
 }

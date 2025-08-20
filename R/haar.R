@@ -17,7 +17,7 @@
 #' x = rnorm(2048)
 #' xi1 = haar(x, q=1)
 #' xi2 = haar(x, q=2)
-
+#' @export
 haar <- function(x, q=2, discarded_scales = 4)
 {
   n = length(x)

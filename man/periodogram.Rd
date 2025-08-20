@@ -7,7 +7,7 @@
 \usage{
 periodogram(xdata)
 
-\method{plot}{periodogram}(X, ...)
+\method{plot}{periodogram}(X, log = "xy", xlabel = "Frequency", ylabel = "Power density", ...)
 }
 \arguments{
 \item{xdata}{}
