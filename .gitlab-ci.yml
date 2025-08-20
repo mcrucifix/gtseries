@@ -24,6 +24,7 @@ stages:
   - build
   - release
 
+
 # define test job
 test-job:
   stage: test
@@ -37,7 +38,10 @@ build-job:
   stage: build
   script:
     # install
-    - R -e 'devtools::install()'
+    - R -e 'devtools::build(".")'
+   artifacts:
+     paths:
+       - "*.tar.gz"
     
 release:
   stage: release
@@ -56,6 +60,9 @@ release:
         - name: "R package tarball"
           filepath: "*.tar.gz"
           link_type: package
+    script:
+       - |
+         glab release create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG
   artifacts:
     paths:
       - "*.tar.gz"
