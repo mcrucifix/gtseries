@@ -42,7 +42,7 @@ build-job:
 release:
   stage: release
   image: alpine:latest
-  needs: ["build"]
+  needs: ["build-job"]
   rules:
     - if: '$CI_COMMIT_TAG'    # only run when you create a Git tag
   script:
