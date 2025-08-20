@@ -38,7 +38,7 @@ build-job:
   stage: build
   script:
     # install
-    - R -e 'devtools::build(".")'
+    - R -e 'devtools::build(path=".")'
    artifacts:
      paths:
        - "*.tar.gz"
