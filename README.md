@@ -15,7 +15,7 @@ cyclostratigraphy.
 
 ```r
 require(devtools)
-git_install("http://forge.uclouvain.be/mcrucifix/tseries.git")
+install_git("https://forge.uclouvain.be/mcrucifix/tseries.git")
 ```
 
 or download the latest relase at (to be completed)
