@@ -44,7 +44,7 @@ X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */
 #include <gsl/gsl_fft_complex.h> 
 
 /*#define PI 3.14159265358979*/
-#define TWOPI (2.*PI)
+#define TWOPI (2.*M_PI)
 
 
 static float ftemp;
