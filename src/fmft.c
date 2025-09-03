@@ -13,6 +13,9 @@ X(t) + iY(t) = Sum_j=1^N [ A_j * exp i (f_j * t + psi_j) ] */
  * - generalise to data length not a power of 2
  * - technical adaptations for compatibility with R */
 
+/* licensing is admittedly unclear. Reasonable measures have
+ * been taken to contact the original authors */ 
+
 /* left overs of development phase */
 /*#define N2FLAG */
 /*#define N2FLAG2*/
@@ -350,7 +353,7 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
       Q[m][m] = 1;
       for(j=1;j<=m-1;j++){
 	fac = (f[m] - f[j]) * (ndata - 1.) / 2.;
-	Q[m][j] = sin(fac)/fac * PI*PI / (PI*PI - fac*fac);
+	Q[m][j] = sin(fac)/fac * M_PI*M_PI / (M_PI*M_PI - fac*fac);
 	Q[j][m] = Q[m][j];
       }
       
@@ -416,8 +419,8 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
      signal1[k-1].amp = amp[1][k];
      signal1[k-1].phase = phase[1][k];
  
-     if(signal1[k-1].phase < -PI) signal1[k-1].phase += TWOPI;
-     if(signal1[k-1].phase >= PI) signal1[k-1].phase -= TWOPI;
+     if(signal1[k-1].phase < -M_PI) signal1[k-1].phase += TWOPI;
+     if(signal1[k-1].phase >= M_PI) signal1[k-1].phase -= TWOPI;
    }
    
    if(flag==2 || flag==3){
@@ -428,8 +431,8 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
        signal2[k-1].amp = amp[1][k] + (amp[1][k] - amp[2][k]);
        signal2[k-1].phase = phase[1][k] + (phase[1][k] - phase[2][k]);
        
-       if(signal2[k-1].phase < -PI) signal2[k-1].phase += TWOPI;
-       if(signal2[k-1].phase >= PI) signal2[k-1].phase -= TWOPI;
+       if(signal2[k-1].phase < -M_PI) signal2[k-1].phase += TWOPI;
+       if(signal2[k-1].phase >= M_PI) signal2[k-1].phase -= TWOPI;
      }
    
    if(flag==3){
@@ -453,8 +456,8 @@ be a power of 2), are the input data X(j-1) and Y(j-1).
        else
  	signal3[k-1].phase += phase[1][k] - phase[2][k]; 
  
-       if(signal3[k-1].phase < -PI) signal3[k-1].phase += TWOPI;
-       if(signal3[k-1].phase >= PI) signal3[k-1].phase -= TWOPI;
+       if(signal3[k-1].phase < -M_PI) signal3[k-1].phase += TWOPI;
+       if(signal3[k-1].phase >= M_PI) signal3[k-1].phase -= TWOPI;
      }
    }
    }
