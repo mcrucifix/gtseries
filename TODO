@@ -5,3 +5,9 @@
 - revis the haar bit
 - revise the periodogram
 - and make a paper ! 
+
+
+- periodogram : MULTIPLY BY N^2 for power
+- consider complex periodogram
+
+- for tone attribution: RAlgoCpp poses some problems. At least relegate to an option branch, authorise installation without it and if not installed just consider the function as unavailable. 
