@@ -8,6 +8,7 @@
 
 
 - periodogram : MULTIPLY BY N^2 for power
-- consider complex periodogram
+- consider complex periodogram  
+- add an option for working in arcsecond / kyr and harmonize MFFT units vs Periodogram. Attention: backward compatiblity will be killed. 
 
 - for tone attribution: RAlgoCpp poses some problems. At least relegate to an option branch, authorise installation without it and if not installed just consider the function as unavailable. 
