@@ -1,219 +1,128 @@
-#' Modified Fourier transform  
+#' Modified Fourier transform
 #'
-#' Implementation of the the Frequency Modified Fourier Transform 
-#' (Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137). 
-#' Given a quasi-periodic complex signal X + iY, the algorithm 
-#' estimates the frequencies (f_j), amplitudes (A_j) and phases 
+#' Implementation of the Frequency Modified Fourier Transform
+#' (Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137).
+#' Given a quasi-periodic complex signal X + iY, the algorithm
+#' estimates the frequencies (f_j), amplitudes (A_j) and phases
 #' (psi_j) in its decomposition. The algorithm was generalised
-#' by M. Crucifix when the input signal is real. 
-#' `mfft` is a wrapper thar redirects the data
+#' by M. Crucifix when the input signal is real.
+#' `mfft` is a wrapper that redirects the data
 #' to `mfft_real` or `mfft_complex` depending on the nature of
-#' the input data. 
+#' the input data.
 #' TODO: add Laskar reference and say that the correction=0 version
 #'       corresponds to Laskar's routine.
-#' @param xdata The data provided either as a time series (advised), or as a vector. 
+#' @param xdata The data provided either as a time series (advised), or as a vector.
 #' may be complex
-#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note this are
-#'        more precisely angular velocities (2\pi / period), expressed in time-inverse units
-#'        with the time resolution encoded in `xdata` if the latter is a time series. 
+#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note these are
+#'        more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
+#'        with the time resolution encoded in `xdata` if the latter is a time series.
 #'        The computed frequencies are in the range given by minfreq and maxfreq.
-#' @param correction:  0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+#' @param correction 0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using synthetic data;
 #' 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference). Note: 1 is not implemented for complex time series; 4 is
 #' not documented for real time series
-#' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
-#' @param force_complex : use the complex number implementation even if the time series is real. 
-#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
-#'         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
+#' @param nfreq The number of frequencies returned, must be smaller than the length of xdata.
+#' @param force_complex Use the complex number implementation even if the time series is real.
+#' @return A `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+#'         Note that because of a language glitch (to be fixed), "Freq" actually means "Rate".
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
-#'         Frequency Modified Fourier transform  for Complex Numbers
-#' \insertRef{sidlichovsky97aa}{gtseries}
+#'         Frequency Modified Fourier transform for Complex Numbers
+#' @references Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
 #' @export mfft
-mfft <- function(xdata, nfreq=15, minfreq=NULL, maxfreq=NULL, correction=1, force_complex = FALSE) {
-  if (is.complex(xdata) || force_complex) return(mfft_complex(xdata, nfreq, minfreq, maxfreq, correction)) else 
-                         return(mfft_real(xdata, nfreq, minfreq, maxfreq, correction)) 
+mfft <- function(xdata, nfreq = 15, minfreq = NULL, maxfreq = NULL, correction = 1, force_complex = FALSE) {
+  if (is.complex(xdata) || force_complex) {
+    return(mfft_complex(xdata, nfreq, minfreq, maxfreq, correction))
+  } else {
+    return(mfft_real(xdata, nfreq, minfreq, maxfreq, correction))
+  }
 }
 
-#' Frequency Modified Fourier transform  for Complex Numbers
+#' Frequency Modified Fourier transform for Complex Numbers
 #'
-#' Implementation of the the Frequency Modified Fourier Transform 
-#' (Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137). 
-#' Given a quasi--periodic complex signal X + iY, the algorithm 
-#' estimates the frequencies (f_j), amplitudes (A_j) and phases 
-#' (psi_j) in its decomposition. 
+#' Implementation of the Frequency Modified Fourier Transform
+#' (Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137).
+#' Given a quasi-periodic complex signal X + iY, the algorithm
+#' estimates the frequencies (f_j), amplitudes (A_j) and phases
+#' (psi_j) in its decomposition.
 #' @useDynLib gtseries
 #' @importFrom stats start
 #' @importFrom stats as.ts
-#' @param xdata The data provided either as a time series (advised), or as a vector. 
+#' @param xdata The data provided either as a time series (advised), or as a vector.
 #' may be complex
-#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note this are
-#'        more precisely angular velocities (2\pi / period), expressed in time-inverse units
-#'        with the time resolution encoded in `xdata` if the latter is a time series. 
-#' @param correction :
+#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note these are
+#'        more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
+#'        with the time resolution encoded in `xdata` if the latter is a time series.
+#' @param correction
 #'      Modified Fourier Transform                  if   correction = 0;
 #'      Frequency Modified Fourier Transform        if   correction = 1;
 #'      FMFT with additional non-linear correction  if   correction = 2
-#' (while the first algorithm is app. 3 times faster than the third one, 
-#' the third algorithm should be in general much more precise).  
+#' (while the first algorithm is approximately 3 times faster than the third one,
+#' the third algorithm should be in general much more precise).
 #' The computed frequencies are in the range given by minfreq and maxfreq.
-#' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
-#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
-#'         note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
+#' @param nfreq The number of frequencies returned, must be smaller than the length of xdata.
+#' @return A `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+#'         Note that because of a language glitch (to be fixed), "Freq" actually means "Rate".
 #' @author Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 #' actual computations
-#' \insertRef{sidlichovsky97aa}{gtseries}
-#
+#' @references Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
 #' @export mfft_complex
-mfft_complex <- function(xdata, nfreq=30,  minfreq=NULL, maxfreq=NULL, correction=1) {
+mfft_complex <- function(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, correction = 1) {
+  ts_data <- stats::as.ts(xdata)
+  time_step <- deltat(ts_data)
+  time_start <- stats::start(ts_data)[1]
+  imag_data <- Im(ts_data)
+  real_data <- Re(ts_data)
+  data_length <- length(real_data)
 
-  xdata <- stats::as.ts(xdata)
-  dt <- deltat(xdata)
-  startx <- stats::start(xdata)[1]
-  ydata <- Im(xdata)
-  xdata <- Re(xdata)
-  ndata <- length(xdata);
-
-  flag <- c(1,0, 2,3)[correction+1]
-  print ('flag')
-  print (flag)
-  if (flag==0) {
-    message ('this correction scheme is not implemented for complex time series \\ will use synthetic data correction instead')
- flag = 2
+  correction_flag <- c(1, 0, 2, 3)[correction + 1]
+  print("correction_flag")
+  print(correction_flag)
+  if (correction_flag == 0) {
+    message("This correction scheme is not implemented for complex time series; will use synthetic data correction instead.")
+    correction_flag <- 2
   }
 
-    if (is.null(minfreq)){
-     my_minfreq <- -pi
-     my_maxfreq <- pi} else {
-     my_minfreq <- minfreq * dt
-     my_maxfreq <- maxfreq * dt}
- 
-     signal1 <- as.double(rep(0,3*nfreq))
-     signal2 <- as.double(rep(0,3*nfreq))
-     signal3 <- as.double(rep(0,3*nfreq))
+  if (is.null(minfreq)) {
+    min_freq <- -pi
+    max_freq <- pi
+  } else {
+    min_freq <- minfreq * time_step
+    max_freq <- maxfreq * time_step
+  }
 
-     Infreq<-as.integer(nfreq)
-     Iminfreq <- as.double(my_minfreq)
-     Imaxfreq <- as.double(my_maxfreq)
-     Ixdata <- as.double(xdata)
-     Iydata <- as.double(ydata)
+  spectrum_freq <- as.integer(nfreq)
+  spectrum_minfreq <- as.double(min_freq)
+  spectrum_maxfreq <- as.double(max_freq)
+  spectrum_real <- as.double(real_data)
+  spectrum_imag <- as.double(imag_data)
+  spectrum_signal1 <- as.double(rep(0, 3 * nfreq))
+  spectrum_signal2 <- as.double(rep(0, 3 * nfreq))
+  spectrum_signal3 <- as.double(rep(0, 3 * nfreq))
 
-     OUT <- .C("fmft", Infreq, Iminfreq, Imaxfreq, as.integer(flag), 
-              as.integer(ndata), Ixdata, Iydata, signal1,signal2,signal3, DUP=TRUE)
+  result <- .C(
+    "fmft",
+    spectrum_freq,
+    spectrum_minfreq,
+    spectrum_maxfreq,
+    as.integer(correction_flag),
+    as.integer(data_length),
+    spectrum_real,
+    spectrum_imag,
+    spectrum_signal1,
+    spectrum_signal2,
+    spectrum_signal3,
+    DUP = TRUE
+  )
 
-     OUTVEC <- t(matrix(OUT[[7+flag]], 3, nfreq))
+  result_matrix <- t(matrix(result[[7 + correction_flag]], 3, nfreq))
 
-     Freq <- OUTVEC[seq(nfreq) ]/dt
-     Ampl <- OUTVEC[nfreq+seq(nfreq) ] 
-     Phase <- OUTVEC[2*nfreq+seq(nfreq) ] - startx*Freq
+  freq_values <- result_matrix[seq(nfreq)] / time_step
+  amplitude_values <- result_matrix[nfreq + seq(nfreq)]
+  phase_values <- result_matrix[2 * nfreq + seq(nfreq)] - time_start * freq_values
 
-     # if this is input is a  real vector, there will be positive and negative frequencies 
-     # corresponding to the same amplitude
-     OUT <- data.frame(Freq=Freq, Amp=Ampl, Phases=Phase)
+  spectrum <- data.frame(Freq = freq_values, Amp = amplitude_values, Phases = phase_values)
+  class(spectrum) <- c("discreteSpectrum", "data.frame")
+  attr(spectrum, "nfreq") <- nfreq
+  attr(spectrum, "data") <- real_data
 
-     class(OUT) <- c("discreteSpectrum", "data.frame")
-     attr(OUT,"nfreq") <- nfreq
-     attr(OUT,"data") <- xdata
-
-     return(OUT)
+  return(spectrum)
 }
-
-#
-#                         return(OUTVEC)
-# dyn.load('fmft.so')
-# ndata=8192
-
-#for (exp in c('d')){
-#  namein <- file.path('La2010',sprintf("La2010%s_alkhqp3L.dat",exp));
-#  nameout <- sprintf("La2010%s_out.RData",exp);
-#  A <- read.table(namein)
-#  deltat=1000
-#  colnames(A) <- c('times','a','l','k','h','q','p')
-#  # ndata = as.integer64(ndata)
-#
-#  times <- seq(ndata)
-#
-#  nfreq <- as.integer(30)
-#  flag =  2 
-#
-#  minfreq <- as.double ( -1e6 / 180. / 3600. * pi /5. ) ;
-#  maxfreq <- as.double ( 1.e6 / 180. / 3600. * pi /5. ) ;
-#
-#  signal1 = as.double (rep(0, nfreq*3))
-#  signal2 = as.double (rep(0, nfreq*3))
-#  signal3 = as.double (rep(0, nfreq*3))
-#
-#  ntrunks <- floor(length(A$times)/ndata)
-#
-#  # EMFFT <- sapply (seq(0,floor(length(A$times)/ndata)-1), function(i)
-#
-#
-#  timemin <- sapply (seq(0,ntrunks-1), function(i) { A$times [ndata* i + 1] });
-#  timemax <- sapply (seq(0,ntrunks-1), function(i) { A$times [ndata* i + ndata ] });
-#
-#  EMFFT <- sapply (seq(0,ntrunks-1), function(i)
-#                       {
-#                         xdata <- A$h[ndata*i + (1:ndata)]
-#                         ydata <- A$k[ndata*i + (1:ndata)]
-#
-#                         OUT = .C("fmft", nfreq, minfreq, maxfreq, as.integer(flag), as.integer(ndata), xdata, ydata, signal1,signal2,signal3, DUP=FALSE)
-#
-#                         # OUTVEC <- matrix(OUT[[8]], 10,3)
-#                         OUTVEC <- t(matrix(OUT[[8]], 3, nfreq))
-#
-#                         return(OUTVEC)
-#
-#                       })
-#
-#
-#  # repack
-#
-#  # repack
-#
-#
-#  Freq <- EMFFT[seq(nfreq), ]*360*60*60/2/pi/deltat
-#  Ampl <- EMFFT[nfreq+seq(nfreq), ]
-#  Phas <- EMFFT[2*nfreq+seq(nfreq), ]
-#
-#
-#  snake <- function(x1, x2, tol=2.e-1, mynfreq=nfreq){
-#    xnew <- c();
-#    xamp <- c();
-#    xpha <- c();
-#    xf1  <- x1[seq(mynfreq)]
-#    xf2  <- x2[seq(mynfreq)]
-#    xa1  <- x1[mynfreq+seq(mynfreq)]
-#    xa2  <- x2[mynfreq+seq(mynfreq)]
-#    xp1  <- x1[2*mynfreq+seq(mynfreq)]
-#    xp2  <- x2[2*mynfreq+seq(mynfreq)]
-#
-#    while(length(xf1) > 0) {
-#      i <- which.min(abs(xf2 - xf1[1])+0*abs(xa2-xa1[1]));
-#      xnew <- c(xnew, xf2[i])
-#      xamp <- c(xamp, xa2[i])
-#      xpha <- c(xpha, xp2[i])
-#      xf2 <- xf2[-i]
-#      xf1 <- xf1[-1]
-#      xa2 <- xa2[-i]
-#      xa1 <- xa1[-1]
-#      xp2 <- xp2[-i]
-#      xp1 <- xp1[-1]
-#    }
-#    return(c(xnew, xamp, xpha))
-#  }
-#
-#  mylist <- apply(EMFFT,2,as.numeric, simplify=FALSE)
-#
-#  terms <- simplify2array(Reduce(snake, mylist, mylist[[1]], accumulate=TRUE))
-#
-#  myfreq <- terms[seq(nfreq),-1] * 360*60*60/2/pi/deltat
-#  myamp <- terms[nfreq+seq(nfreq),-1]
-#  myphase <- terms[2*nfreq+seq(nfreq),-1]
-#
-#
-#  rownames (myfreq) <- timemin
-#  rownames (myamp)  <- timemin
-#  rownames (myphase)<- timemin
-#
-#
-#  OUT = list(Freq=myfreq, Amp=myamp, Phase=myphase)
-#  save(OUT, file=nameout)
-#}:
