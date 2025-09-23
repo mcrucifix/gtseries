@@ -42,8 +42,11 @@ approx_ts <- function (data,tcoord="x",dcoord="y",scale=1,n=2048,thin=FALSE,spli
     }
 
     ## then interpolates
-
-    dummy <-  eval(call(ifelse(spline,"spline","approx"),x,y,n=n))
+    if (spline) {
+      dummy <- spline(x, y, n = n)
+    } else {
+      dummy <- approx(x, y, n = n)
+    }
     out <<- ts(dummy$y,start=dummy$x[1]/scale, deltat=diff(dummy$x[1:2])/scale)
    })
 
