@@ -7,48 +7,50 @@
 mfft(
   xdata,
   nfreq = 15,
-  minfreq = NULL,
-  maxfreq = NULL,
+  min_freq = NULL,
+  max_freq = NULL,
   correction = 1,
   force_complex = FALSE
 )
 }
 \arguments{
-\item{xdata}{The data provided either as a time series (advised), or as a vector. 
+\item{xdata}{The data provided either as a time series (advised), or as a vector.
 may be complex}
 
-\item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
+\item{nfreq}{The number of frequencies returned, must be smaller than the length of xdata.}
 
-\item{minfreq, maxfreq}{If provided, bracket the frequencies to be probed. Note this are
-more precisely angular velocities (2\pi / period), expressed in time-inverse units
-with the time resolution encoded in `xdata` if the latter is a time series. 
-The computed frequencies are in the range given by minfreq and maxfreq.}
+\item{min_freq, max_freq}{If provided, bracket the frequencies to be probed. Note these are
+more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
+with the time resolution encoded in `xdata` if the latter is a time series.
+The computed frequencies are in the range given by min_freq and max_freq.}
 
-\item{force_complex}{: use the complex number implementation even if the time series is real.}
-
-\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+\item{correction}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using synthetic data;
 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference). Note: 1 is not implemented for complex time series; 4 is
 not documented for real time series}
+
+\item{force_complex}{Use the complex number implementation even if the time series is real.}
 }
 \value{
-a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
-        note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
+A `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+        Note that because of a language glitch (to be fixed), "Freq" actually means "Rate".
 }
 \description{
-Implementation of the the Frequency Modified Fourier Transform 
-(Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137). 
-Given a quasi-periodic complex signal X + iY, the algorithm 
-estimates the frequencies (f_j), amplitudes (A_j) and phases 
+Implementation of the Frequency Modified Fourier Transform
+(Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137).
+Given a quasi-periodic complex signal X + iY, the algorithm
+estimates the frequencies (f_j), amplitudes (A_j) and phases
 (psi_j) in its decomposition. The algorithm was generalised
-by M. Crucifix when the input signal is real. 
-`mfft` is a wrapper thar redirects the data
+by M. Crucifix when the input signal is real.
+`mfft` is a wrapper that redirects the data
 to `mfft_real` or `mfft_complex` depending on the nature of
-the input data. 
+the input data.
 TODO: add Laskar reference and say that the correction=0 version
       corresponds to Laskar's routine.
 }
+\references{
+Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
+}
 \author{
 Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
-        Frequency Modified Fourier transform  for Complex Numbers
-\insertRef{sidlichovsky97aa}{gtseries}
+        Frequency Modified Fourier transform for Complex Numbers
 }

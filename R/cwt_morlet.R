@@ -257,7 +257,6 @@ plot.wavelet <- function(x, resx = 400, resy = 300,
                          xlab = "Time", ylab = "Period", scaling_correction = 0,
                          col = col_wavelet, legend = FALSE,
                          axes = TRUE, Mode = Mod, plotMask = TRUE, ...) {
-  require(fields)
   time_vec <- attr(x, "time")
   period <- attr(x, "period")
   mask <- attr(x, "mask")
@@ -312,7 +311,6 @@ powerspectrum.wavelet <- function(wave, ...) {
 #' @return Ridge or modified wavelet object.
 #' @importFrom signal unwrap
 analytic.ridge <- function(wave, ridge_only = FALSE, plim = c(-Inf, +Inf)) {
-  require("signal")
   period <- attr(wave, "period")
   n_period <- length(period)
   period_out <- which(period < plim[1] | period > plim[2])

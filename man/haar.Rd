@@ -2,9 +2,12 @@
 % Please edit documentation in R/haar.R
 \name{haar}
 \alias{haar}
+\alias{plot.fluctuation_specturm}
 \title{Haar fluctuation spectrum}
 \usage{
 haar(x, q = 2, discarded_scales = 4)
+
+\method{plot}{fluctuation_specturm}(x, ...)
 }
 \arguments{
 \item{x}{the input series (typically a numeric)}
@@ -17,7 +20,7 @@ still needs to be documented
 currently requires n=2^i data points
 }
 \examples{
-x = rnorm(2048)
-xi1 = haar(x, q=1)
-xi2 = haar(x, q=2)
+x <- rnorm(2048)
+xi1 <- haar(x, q = 1)
+xi2 <- haar(x, q = 2)
 }

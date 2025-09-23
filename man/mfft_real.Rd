@@ -2,42 +2,47 @@
 % Please edit documentation in R/mfft_real.R
 \name{mfft_real}
 \alias{mfft_real}
-\title{Frequency Modified Fourier transform  for real series}
+\title{Frequency Modified Fourier transform for real series}
 \usage{
 mfft_real(
-  xdata,
-  nfreq = 5,
-  minfreq = NULL,
-  maxfreq = NULL,
+  x_data,
+  n_freq = 5,
+  min_freq = NULL,
+  max_freq = NULL,
   correction = 1,
   fast = TRUE
 )
 }
 \arguments{
-\item{xdata}{The data provided either as a time series (advised), or as a vector.}
+\item{x_data}{The data provided either as a time series (advised), or as a vector.}
 
-\item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
+\item{n_freq}{The number of frequencies returned, must be smaller than the length of `x_data`.}
 
-\item{minfreq, maxfreq}{If provided, bracket the frequencies to be probed. Note this are
-more precisely angular velocities (2\pi / period), expressed in time-inverse units
-with the time resolution encoded in `xdata` if the latter is a time series.}
+\item{min_freq, max_freq}{If provided, bracket the angular frequencies to be probed.
+Note: these are angular velocities (\eqn{2\pi / \mathrm{period}}), expressed in time-inverse units,
+with the time resolution encoded in `x_data` if the latter is a time series.
+The default for `min_freq` is 0, and for `max_freq` is \eqn{\pi}.}
 
-\item{fast}{(default = TRUE) uses analytical formulations for the crossproducts involving sines and cosines. 
-note: this is not really faster because the bottleneck is actually the goden section search. But more elegant.}
-
-\item{correction:}{0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using sythetic data; 
+\item{correction}{0: no frequency correction (equivalent to Laskar);
+1: frequency correction using linear approximation;
+2: frequency correction using synthetic data;
 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)}
+
+\item{fast}{(default = TRUE) Uses analytical formulations for the crossproducts involving sines and cosines.
+Note: this is not really faster because the bottleneck is actually the golden section search, but more elegant.}
 }
 \value{
-a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Amp", and "Phases".
 }
 \description{
 R-coded version of the Modified Fourier Transform
-with frequency  correction, adapted to R. 
-much slower than mfft (for complex numbers) as the latter is
+with frequency correction, adapted to R.
+Much slower than `mfft` (for complex numbers) as the latter is
 mainly written in C, but is physically
 more interpretable if signal is real, because
-it is designed to have no imaginary part in the residual
+it is designed to have no imaginary part in the residual.
+}
+\details{
 A C-version should be supplied one day.
 }
 \examples{

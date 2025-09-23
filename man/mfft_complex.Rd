@@ -2,41 +2,48 @@
 % Please edit documentation in R/mfft_complex.R
 \name{mfft_complex}
 \alias{mfft_complex}
-\title{Frequency Modified Fourier transform  for Complex Numbers}
+\title{Frequency Modified Fourier transform for Complex Numbers}
 \usage{
-mfft_complex(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, correction = 1)
+mfft_complex(
+  xdata,
+  nfreq = 30,
+  min_freq = NULL,
+  max_freq = NULL,
+  correction = 1
+)
 }
 \arguments{
-\item{xdata}{The data provided either as a time series (advised), or as a vector. 
+\item{xdata}{The data provided either as a time series (advised), or as a vector.
 may be complex}
 
-\item{nfreq}{is the number of frequencies returned, must be smaller that the length of  xdata.}
+\item{nfreq}{The number of frequencies returned, must be smaller than the length of xdata.}
 
-\item{minfreq, maxfreq}{If provided, bracket the frequencies to be probed. Note this are
-more precisely angular velocities (2\pi / period), expressed in time-inverse units
+\item{min_freq, max_freq}{If provided, bracket the frequencies to be probed. Note these are
+more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
 with the time resolution encoded in `xdata` if the latter is a time series.}
 
-\item{correction}{:
-     Modified Fourier Transform                  if   correction = 0;
+\item{correction}{Modified Fourier Transform                  if   correction = 0;
      Frequency Modified Fourier Transform        if   correction = 1;
      FMFT with additional non-linear correction  if   correction = 2
-(while the first algorithm is app. 3 times faster than the third one, 
-the third algorithm should be in general much more precise).  
-The computed frequencies are in the range given by minfreq and maxfreq.}
+(while the first algorithm is approximately 3 times faster than the third one,
+the third algorithm should be in general much more precise).
+The computed frequencies are in the range given by min_freq and max_freq.}
 }
 \value{
-a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases". 
-        note that because of a language glitch (to be fixed), "Freq" actually means "Rate"
+A `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
+        Note that because of a language glitch (to be fixed), "Freq" actually means "Rate".
 }
 \description{
-Implementation of the the Frequency Modified Fourier Transform 
-(Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137). 
-Given a quasi--periodic complex signal X + iY, the algorithm 
-estimates the frequencies (f_j), amplitudes (A_j) and phases 
+Implementation of the Frequency Modified Fourier Transform
+(Sidlichovsky and Nesvorny 1997, Cel. Mech. 65, 137).
+Given a quasi-periodic complex signal X + iY, the algorithm
+estimates the frequencies (f_j), amplitudes (A_j) and phases
 (psi_j) in its decomposition.
+}
+\references{
+Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
 }
 \author{
 Michel Crucifix for the R code, and David Nesvorny for most of the supporting C code doing the
 actual computations
-\insertRef{sidlichovsky97aa}{gtseries}
 }

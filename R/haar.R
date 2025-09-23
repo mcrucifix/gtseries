@@ -45,6 +45,6 @@ haar <- function(x, q = 2, discarded_scales = 4) {
 
 #' @rdname haar
 #' @export
-plot.fluctuation_specturm <- function(x) {
+plot.fluctuation_specturm <- function(x,...) {
   plot(attr(x, "scale")$x, attr(x, "scale")$y, log = "xy", xlab = "scale", ylab = "Amplitude")
 }

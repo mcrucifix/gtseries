@@ -4,42 +4,33 @@
 \alias{develop.discreteSpectrum}
 \title{Discrete spectrum reconstruction}
 \usage{
-\method{develop}{discreteSpectrum}(
-  M,
-  start = NULL,
-  end = NULL,
-  deltat = NULL,
-  times = NULL,
-  dfunction = cos,
-  maxfreq = NULL,
-  sum = TRUE,
-  trendshift = TRUE
-)
+\method{develop}{discreteSpectrum}(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ...)
 }
 \arguments{
-\item{M}{: discreteSpectrum object}
+\item{M}{discreteSpectrum object}
 
-\item{deltat}{: see start.}
+\item{start}{see \code{develop}}
 
-\item{dfunction}{is the trigonometrical function. Classically one of 'cos', 'sin', or 'cis'}
+\item{end}{see \code{develop}}
 
-\item{sum}{: TRUE if user wants to sum components %in% the reconstruction}
+\item{deltat}{see \code{develop}}
 
-\item{trendshift}{: TRUE if user wants to account for trend and shift encoded in the discreteSpectrum object}
+\item{times}{see \code{develop}}
 
-\item{times:}{if supplied, times of the decomposition}
-
-\item{start:}{if supplied, overrides time and will generate a time series with start and deltat, which must then
-be supplied as well}
+\item{...}{arguments passed through; may include:
+\describe{
+  \item{dfunction}{trigonometrical function ('cos', 'sin', or 'cis')}
+  \item{max_freq}{maximum frequency to include}
+  \item{sum}{logical: sum components in reconstruction?}
+  \item{trendshift}{logical: account for trend and shift encoded in the object?}
+}}
 }
 \value{
-list of reconstructed components if sum=FALSE,  full
-        reconstructed time series otherwise
+list of reconstructed components if sum=FALSE, full reconstructed time series otherwise
 }
 \description{
 Discrete spectrum reconstruction
 }
 \note{
-if none if times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
-        which must then be present. If no `xdata` is availble, return an error.
+if none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
 }

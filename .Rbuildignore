@@ -7,3 +7,8 @@ miscellaneous_notes
 TODO
 ^LICENSE\.md$
 .Renviron
+deprecated
+notebook
+ .gitlab-ci.yml
+
+

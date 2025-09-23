@@ -13,10 +13,10 @@
 #'       corresponds to Laskar's routine.
 #' @param xdata The data provided either as a time series (advised), or as a vector.
 #' may be complex
-#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note these are
+#' @param min_freq,max_freq If provided, bracket the frequencies to be probed. Note these are
 #'        more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
 #'        with the time resolution encoded in `xdata` if the latter is a time series.
-#'        The computed frequencies are in the range given by minfreq and maxfreq.
+#'        The computed frequencies are in the range given by min_freq and max_freq.
 #' @param correction 0: no frequency correction (equivalent to Laskar); 1 : frequency correction using linear approximation ; 2: frequency correction using synthetic data;
 #' 3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference). Note: 1 is not implemented for complex time series; 4 is
 #' not documented for real time series
@@ -28,11 +28,11 @@
 #'         Frequency Modified Fourier transform for Complex Numbers
 #' @references Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
 #' @export mfft
-mfft <- function(xdata, nfreq = 15, minfreq = NULL, maxfreq = NULL, correction = 1, force_complex = FALSE) {
+mfft <- function(xdata, nfreq = 15, min_freq = NULL, max_freq = NULL, correction = 1, force_complex = FALSE) {
   if (is.complex(xdata) || force_complex) {
-    return(mfft_complex(xdata, nfreq, minfreq, maxfreq, correction))
+    return(mfft_complex(xdata, nfreq, min_freq, max_freq, correction))
   } else {
-    return(mfft_real(xdata, nfreq, minfreq, maxfreq, correction))
+    return(mfft_real(xdata, nfreq, min_freq, max_freq, correction))
   }
 }
 
@@ -48,7 +48,7 @@ mfft <- function(xdata, nfreq = 15, minfreq = NULL, maxfreq = NULL, correction =
 #' @importFrom stats as.ts
 #' @param xdata The data provided either as a time series (advised), or as a vector.
 #' may be complex
-#' @param minfreq,maxfreq If provided, bracket the frequencies to be probed. Note these are
+#' @param min_freq,max_freq If provided, bracket the frequencies to be probed. Note these are
 #'        more precisely angular velocities (\eqn{2\pi/\mathrm{period}}), expressed in time-inverse units
 #'        with the time resolution encoded in `xdata` if the latter is a time series.
 #' @param correction
@@ -57,7 +57,7 @@ mfft <- function(xdata, nfreq = 15, minfreq = NULL, maxfreq = NULL, correction =
 #'      FMFT with additional non-linear correction  if   correction = 2
 #' (while the first algorithm is approximately 3 times faster than the third one,
 #' the third algorithm should be in general much more precise).
-#' The computed frequencies are in the range given by minfreq and maxfreq.
+#' The computed frequencies are in the range given by min_freq and max_freq.
 #' @param nfreq The number of frequencies returned, must be smaller than the length of xdata.
 #' @return A `discreteSpectrum` object, based on a data.frame with columns "Freq", "Ampl" and "Phases".
 #'         Note that because of a language glitch (to be fixed), "Freq" actually means "Rate".
@@ -65,7 +65,7 @@ mfft <- function(xdata, nfreq = 15, minfreq = NULL, maxfreq = NULL, correction =
 #' actual computations
 #' @references Sidlichovsky, M. & Nesvorny, D. (1997). Frequency Modified Fourier Transform. Celestial Mechanics and Dynamical Astronomy, 65, 137.
 #' @export mfft_complex
-mfft_complex <- function(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, correction = 1) {
+mfft_complex <- function(xdata, nfreq = 30, min_freq = NULL, max_freq = NULL, correction = 1) {
   ts_data <- stats::as.ts(xdata)
   time_step <- deltat(ts_data)
   time_start <- stats::start(ts_data)[1]
@@ -81,17 +81,17 @@ mfft_complex <- function(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, corr
     correction_flag <- 2
   }
 
-  if (is.null(minfreq)) {
+  if (is.null(min_freq)) {
     min_freq <- -pi
     max_freq <- pi
   } else {
-    min_freq <- minfreq * time_step
-    max_freq <- maxfreq * time_step
+    min_freq <- min_freq * time_step
+    max_freq <- max_freq * time_step
   }
 
   spectrum_freq <- as.integer(nfreq)
-  spectrum_minfreq <- as.double(min_freq)
-  spectrum_maxfreq <- as.double(max_freq)
+  spectrum_min_freq <- as.double(min_freq)
+  spectrum_max_freq <- as.double(max_freq)
   spectrum_real <- as.double(real_data)
   spectrum_imag <- as.double(imag_data)
   spectrum_signal1 <- as.double(rep(0, 3 * nfreq))
@@ -101,8 +101,8 @@ mfft_complex <- function(xdata, nfreq = 30, minfreq = NULL, maxfreq = NULL, corr
   result <- .C(
     "fmft",
     spectrum_freq,
-    spectrum_minfreq,
-    spectrum_maxfreq,
+    spectrum_min_freq,
+    spectrum_max_freq,
     as.integer(correction_flag),
     as.integer(data_length),
     spectrum_real,

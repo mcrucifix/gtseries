@@ -2,9 +2,7 @@
 % Please edit documentation in R/cwt_morlet.R
 \name{cwt_morlet}
 \alias{cwt_morlet}
-\alias{plot.wavelet}
-\alias{powerspectrum.wavelet}
-\title{Continous Morlet Wavelet Transform}
+\title{Continuous Morlet Wavelet Transform}
 \usage{
 cwt_morlet(
   A,
@@ -16,23 +14,30 @@ cwt_morlet(
   scale = NA,
   deriv = FALSE
 )
+}
+\arguments{
+\item{A}{Numeric or time series vector.}
 
-\method{plot}{wavelet}(
-  x,
-  resx = 400,
-  resy = 300,
-  xlab = "Time",
-  ylab = "Period",
-  scaling_correction = 0,
-  col = col_wavelet,
-  legend = FALSE,
-  Mode = Mod,
-  plotMask = TRUE,
-  ...
-)
+\item{inter}{Integer. Number of intervals per octave.}
 
-powerspectrum.wavelet(wave, ...)
+\item{k0}{Numeric. Morlet wavelet parameter.}
+
+\item{amin}{Minimum scale.}
+
+\item{amax}{Maximum scale.}
+
+\item{calcmask}{Logical. Whether to mask edge effects.}
+
+\item{scale}{Numeric. Specific scale(s) to use.}
+
+\item{deriv}{Logical. Whether to calculate derivatives.}
+}
+\value{
+A wavelet object (matrix with attributes).
 }
 \description{
-Continous Morlet Wavelet Transform
+Computes the Continuous Morlet Wavelet Transform (CWT) of a time series.
+}
+\details{
+Returns a wavelet object containing the complex CWT coefficients, with attributes for time, scale, period, and more.
 }

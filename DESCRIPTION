@@ -10,6 +10,6 @@ Description: Collection of time series analysis tools, focused on spectral decom
 License: MIT licence
 LazyLoad: yes
 RoxygenNote: 7.3.2
-Imports: Rdpack, sfsmisc, cmna, gsignal, pracma, RcppAlgos
+Imports: Rdpack, sfsmisc, cmna, gsignal, pracma, RcppAlgos, fields, signal
 RdMacros: Rdpack
 LazyData: true

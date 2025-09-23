@@ -25,24 +25,30 @@ develop <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ..
 cis <- function(x) exp(1i * x)
 
 #' Discrete spectrum reconstruction
-#'
-#' Reconstructs a time series (or its components) from a discrete spectrum decomposition.
-#'
-#' @param M A `discreteSpectrum` object
-#' @param start If supplied, the start time of the decomposition (overrides `times`)
-#' @param end If supplied, the end time of the decomposition (used with `start` and `deltat`)
-#' @param deltat If supplied, the time interval (used with `start` and `end`)
-#' @param times If supplied, explicit times for the decomposition
-#' @param dfunction Trigonometrical function, e.g. 'cos', 'sin', or 'cis'
-#' @param maxfreq Maximum frequency to include in the reconstruction
-#' @param sum TRUE if the user wants to sum components in the reconstruction
-#' @param trendshift TRUE if the user wants to account for trend and shift encoded in the `discreteSpectrum` object
-#' @note If none of `times`, `start`, and `deltat` are supplied, will reconstruct based on the attribute `data` (which must be present). If no `data` attribute is available, an error is returned.
-#' @return If `sum = FALSE`, a list of reconstructed components. If `sum = TRUE`, the full reconstructed time series.
+#' @param M discreteSpectrum object
+#' @param start see \code{develop}
+#' @param end see \code{develop}
+#' @param deltat see \code{develop}
+#' @param times see \code{develop}
+#' @param ... arguments passed through; may include:
+#'   \describe{
+#'     \item{dfunction}{trigonometrical function ('cos', 'sin', or 'cis')}
+#'     \item{max_freq}{maximum number of frequency to include}
+#'     \item{sum}{logical: sum components in reconstruction?}
+#'     \item{trendshift}{logical: account for trend and shift encoded in the object?}
+#'   }
+#' @note if none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
+#' @return list of reconstructed components if sum=FALSE, full reconstructed time series otherwise
+#' @method develop discreteSpectrum
 #' @export
-develop.discreteSpectrum <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL,
-                                    dfunction = cos, maxfreq = NULL, sum = TRUE, trendshift = TRUE) {
+develop.discreteSpectrum <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ...) {
   if (!("discreteSpectrum" %in% class(M))) stop("object is not a discreteSpectrum decomposition")
+
+  args <- list(...)
+  dfunction   <- if (!is.null(args$dfunction)) args$dfunction else cos
+  max_freq  <- if (!is.null(args$max_freq)) args$max_freq else NULL
+  sum  <- if (!is.null(args$sum)) args$ylab else TRUE
+  trendshift  <- if (!is.null(args$trendshift)) args$trendshift else TRUE
 
   times_is_ts <- FALSE
   if (is.ts(times)) {
@@ -69,7 +75,8 @@ develop.discreteSpectrum <- function(M, start = NULL, end = NULL, deltat = NULL,
 
   n_freq <- attr(M, "nfreq")
   if (is.null(n_freq)) n_freq <- length(M$Amp)
-  if (!is.null(maxfreq)) n_freq <- min(n_freq, maxfreq)
+  max_freq <- attr(M, "max_freq")
+  if (!is.null(max_freq)) n_freq <- min(n_freq, max_freq)
 
   if (times_is_ts) {
     reconstructed <- lapply(seq(n_freq), function(i)
@@ -119,7 +126,7 @@ plot.discreteSpectrum <- function(M, periods = FALSE, labels = NULL, ...) {
   if (periods) {
     frequencies <- pretty(range(M$Freq / (2 * pi)))
     plabels <- as.character(1 / frequencies)
-    if (0 %in% frequencies) plabels[which(frequencies == 0)] <- "∞"
+    if (0 %in% frequencies) plabels[which(frequencies == 0)] <- "\u221E"
     axis(1, line = 3, at = 2 * pi * frequencies, labels = plabels)
     mtext("Rate", 1, 2)
     mtext("Period", 1, 4)

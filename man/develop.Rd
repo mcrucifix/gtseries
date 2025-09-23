@@ -7,21 +7,24 @@
 develop(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ...)
 }
 \arguments{
-\item{deltat}{: see start.}
+\item{M}{input object (typically a spectrum or decomposition)}
 
-\item{arg:}{input class}
+\item{start}{If supplied, the start time of the decomposition (overrides `times`)}
 
-\item{times:}{if supplied, times of the decomposition}
+\item{end}{If supplied, the end time of the decomposition (used with `start` and `deltat`)}
 
-\item{start:}{if supplied, overrides time and will generate a time series with start and deltat, which must then
-be supplied as well}
+\item{deltat}{If supplied, the time interval (used with `start` and `end`)}
+
+\item{times}{If supplied, explicit times for the decomposition}
+
+\item{...}{Further arguments passed to methods}
 }
 \value{
-nothing
+Nothing; method dispatches to appropriate method.
 }
 \description{
-Develop a spectrum into a time series (generic)
+This is a generic function to reconstruct a time series from a spectrum decomposition.
 }
 \note{
-place holder for type-specific develop functions
+Place holder for type-specific develop functions.
 }

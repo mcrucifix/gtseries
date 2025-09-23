@@ -7,7 +7,7 @@
 \usage{
 mmfft(xdata, seglength = length(xdata)\%/\%16, ...)
 
-\method{plot}{mmfft}(x)
+\method{plot}{mmfft}(x, ...)
 }
 \arguments{
 \item{xdata}{The data provided either as a time series (advised), or as a vector. 
