@@ -202,7 +202,7 @@ cwt_morlet <- function (A,inter=20,k0=5.6,amin=1,amax=Inf,calcmask=TRUE,scale=NA
 
 #' @rdname cwt_morlet
 #' @export
-plot.wavelet <- function (x,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,Mode=Mod,plotMask=TRUE,...)
+plot.wavelet <- function (x,resx=400,resy=300,xlab="Time",ylab="Period",scaling_correction=0,col=col_wavelet,legend=FALSE,axes=TRUE,Mode=Mod,plotMask=TRUE,...)
 
 {
   require(fields)
@@ -219,8 +219,10 @@ plot.wavelet <- function (x,resx=400,resy=300,xlab="Time",ylab="Period",scaling_
   for (i in 1:length(suba)) wave_scaled[,i] <- wave_scaled[,i]/(aa[i]^scaling_correction)
   if (legend) par(oma=c(2,2,2,5))
   image(xx[subx],period[suba],wave_scaled,log="y",ylab=ylab,xlab=xlab,axes=FALSE,col=col,...)
+  if (axes){
   axis(1)
   axis.log10(2,"")
+  }
   if (legend) {par(oma=c(2,2,2,2))
   image.plot(xx[subx],period[suba],wave_scaled,legend.only=TRUE,log="y",ylab=ylab,xlab=xlab,axes=FALSE,col=col,...)
   par(oma=c(2,2,2,5))}
