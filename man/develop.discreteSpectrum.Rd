@@ -17,20 +17,18 @@
 
 \item{times}{see \code{develop}}
 
-\item{...}{arguments passed through; may include:
-\describe{
-  \item{dfunction}{trigonometrical function ('cos', 'sin', or 'cis')}
-  \item{max_freq}{maximum frequency to include}
-  \item{sum}{logical: sum components in reconstruction?}
-  \item{trendshift}{logical: account for trend and shift encoded in the object?}
-}}
+\item{...}{Further arguments passed through. May include:
+- `dfunction`: trigonometrical function (`cos`, `sin`, or `cis`)
+- `max_freq`: maximum number of frequencies to include
+- `sum`: logical; sum components in reconstruction?
+- `trendshift`: logical; account for trend and shift encoded in the object?}
 }
 \value{
-list of reconstructed components if sum=FALSE, full reconstructed time series otherwise
+List of reconstructed components if sum=FALSE, full reconstructed time series otherwise.
 }
 \description{
-Discrete spectrum reconstruction
+Reconstruct a time series from a discreteSpectrum object.
 }
 \note{
-if none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
+If none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`.
 }

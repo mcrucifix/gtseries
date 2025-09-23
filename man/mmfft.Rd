@@ -5,15 +5,15 @@
 \alias{plot.mmfft}
 \title{Moving Modified Fourier Transform}
 \usage{
-mmfft(xdata, seglength = length(xdata)\%/\%16, ...)
+mmfft(x, seglength = length(x)\%/\%16, ...)
 
 \method{plot}{mmfft}(x, ...)
 }
 \arguments{
-\item{xdata}{The data provided either as a time series (advised), or as a vector. 
+\item{x}{The data provided either as a time series (advised), or as a vector. 
 may be complex}
 
-\item{seglength}{Length of moving segment. Both xdata length and seglenthm are adviced to be a power of 2 (faster)}
+\item{seglength}{Length of moving segment. Both x length and seglenthm are adviced to be a power of 2 (faster)}
 
 \item{...}{passed to mmft}
 }
@@ -24,7 +24,7 @@ a `mmfft` object
 Moving Modified Fourier Transform
 }
 \note{
-in the current implementation, the right-hand-side of xdata that is left after an integer division 
+in the current implementation, the right-hand-side of x that is left after an integer division 
        by seglenth is discarded
 }
 \author{

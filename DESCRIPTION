@@ -7,9 +7,11 @@ Date: 2025-09-05
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
 Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
 Description: Collection of time series analysis tools, focused on spectral decomposition and reconstruction, with an original focus on astronomical theory of paleoclimates and cyclostratigraphy. 
-License: MIT licence
+License: MIT + file LICENSE
 LazyLoad: yes
 RoxygenNote: 7.3.2
-Imports: Rdpack, sfsmisc, cmna, gsignal, pracma, RcppAlgos, fields, signal
+Imports: Rdpack, sfsmisc, cmna, RcppAlgos, fields, signal
 RdMacros: Rdpack
 LazyData: true
+Depends: 
+    R (>= 2.10)

@@ -4,10 +4,16 @@
 \alias{as.data.frame.discreteSpectrum}
 \title{Convert discreteSpectrum object to data.frame}
 \usage{
-\method{as.data.frame}{discreteSpectrum}(x)
+\method{as.data.frame}{discreteSpectrum}(x, row.names, optional, ...)
 }
 \arguments{
 \item{x}{discreteSpectrum object}
+
+\item{row.names}{kept for compatibility with as.data.frame S3 method}
+
+\item{optional}{kept for compatibility with as.data.frame S3 method}
+
+\item{...}{passed to the data.frame function}
 }
 \value{
 Data.frame with columns Freq, Amp, Phases

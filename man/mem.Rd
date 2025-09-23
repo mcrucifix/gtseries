@@ -15,12 +15,22 @@ mem(A, method = "burg", order.max = 90, ...)
 \item{method}{Estimation method, passed to the standard `ar` function, which is one of "yule-walker", "burg", "ols", "mle", "yw". Defaults to "burg".}
 
 \item{order.max}{maximum order of the autoregressive model being fitted}
+
+\item{...}{Additional arguments passed to \code{ar}.}
+
+\item{x}{A \code{memObject}, the result from \code{mem()} (for plotting).}
+
+\item{period}{Logical. If \code{TRUE}, the x axis is shown as period instead of frequency.}
+
+\item{xaxp}{Arguments passed to adjust the x axis.}
+
+\item{yaxp}{Arguments passed to adjust the y axis.}
 }
 \value{
 a memObject
 }
 \description{
-Maximum entropy spectral analysis (MESA) is the statistical estimation of the power spectrum of a stationary time series using the maximum entropy (ME) method. The resulting ME spectral estimator is parametric and equivalent to an autoregressive (AR) spectral estimator (copied from  \\insertCite{pardo-iguzquiza21aa}{gtseries}). The method relies heavily on the standard-R `ar` function, of which it is essentially a wrapper associated with a plot class function (authors: Martyn Plummer. C code for  `ar.burg` by B. D. Ripley.)
+Maximum entropy spectral analysis (MESA) is the statistical estimation of the power spectrum of a stationary time series using the maximum entropy (ME) method. The resulting ME spectral estimator is computed by fitting an autoregressive model to the input time series.
 }
 \references{
 \insertRef{Burg75aa}{gtseries}

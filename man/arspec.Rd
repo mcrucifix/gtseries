@@ -2,12 +2,20 @@
 % Please edit documentation in R/arspec.R
 \name{arspec}
 \alias{arspec}
-\title{Theoretical Spectrum of autoregressive spectrum}
+\title{Theoretical Spectrum of Autoregressive Process}
 \usage{
 arspec(f, ar)
+}
+\arguments{
+\item{f}{numeric; vector of frequencies at which to calculate the spectrum.}
+
+\item{ar}{numeric; vector of autoregressive coefficients.}
+}
+\value{
+Numeric vector or matrix of theoretical spectral density values.
 }
 \description{
 Calculates the theoretical density frequency of an
 autoregressive process, according to equation
-(3.3) of Akaike (1969)
+(3.3) of Akaike (1969).
 }

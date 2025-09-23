@@ -5,13 +5,11 @@
 \alias{plot.periodogram}
 \title{Periodogram}
 \usage{
-periodogram(xdata)
+periodogram(x)
 
 \method{plot}{periodogram}(x, ...)
 }
 \arguments{
-\item{xdata}{}
-
 \item{x}{periodogram object}
 
 \item{...}{further arguments passed to the default plot method, may include:

@@ -15,7 +15,7 @@
 #' results have been validated and shown to produce exactly the same results
 #' as the Spectra toolking on 25.9.08
 
-#' @param X the input series (typically a numeric)
+#' @param x the input series (typically a numeric)
 #' @param N if provided,  the length of the input series to beconsiderd 
 #' @param M the length of the sliding window
 #' @param Nrec number of components to be output
@@ -74,19 +74,19 @@
 #' plot(fullrec - signal + mean(signal))
 #' 
 #' @export ssa
-ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
+ssa <- function(x,N=length(x),M=M,Nrec=10) {
 
   # construct  Toeplitz Matrix for reference signal (eq. 6)
   # according to Vautard and Ghil, 1989
   # added: Nrec : number of components of reconstruction
 
-  X <- X - mean(X)
+  x <- x - mean(x)
   cij <- vector("double",M)
 
   for (i in 1:M) {for (j in i:M)
      ij <- j-i
      T <- N-ij
-     cij[ij+1]=crossprod(X[1:T],X[(1+ij):(T+ij)])/T
+     cij[ij+1]=crossprod(x[1:T],x[(1+ij):(T+ij)])/T
      }
 
   c <- toeplitz(cij)
@@ -109,7 +109,7 @@ ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
 
 
    for (k in 1:Nrec) { for (t in 1:(N-M+1))
-     A[t,k] <- crossprod(X[t:(t+M-1)],rhok[,k])
+     A[t,k] <- crossprod(x[t:(t+M-1)],rhok[,k])
    }
 
   # reconstruction from the eigenvectors (eq. 11)
@@ -145,7 +145,7 @@ ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
   LA <- vector("double",Nrec)
   for (k in 1:Nrec) {
    PCA[k,] <- PCA[k,]/Mt
-   LA[k]=crossprod(PCA[k,],X[1:N])
+   LA[k]=crossprod(PCA[k,],x[1:N])
   }
 
   SSAObject<- list(lambda=lambda,LA=LA,A=A,rhok=rhok,cij=cij,PCA=PCA)
@@ -156,6 +156,7 @@ ssa <- function(X=X,N=length(X),M=M,Nrec=10) {
 
 
 #' @rdname ssa
+#' @param ... Further anguments passed to the standard plot function
 #' @export
 plot.SSAObject <- function (x,...)
 {

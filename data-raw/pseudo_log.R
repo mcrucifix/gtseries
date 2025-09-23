@@ -19,4 +19,4 @@ pseudo_log_spectrum <- pseudo_log_spectrum
 attr(pseudo_log,"data")  <- pseudo_log_data
 
 
-usethis::use_data(pseudo_log, overwrite = TRUE)
+usethis::use_data(pseudo_log, overwrite = TRUE, compress="xz")

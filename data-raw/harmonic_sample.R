@@ -15,7 +15,7 @@ class(harmonic_sample_spectrum) <- 'discreteSpectrum'
 harmonic_sample_noisy <- harmonic_sample_spectrum
 attr(harmonic_sample_noisy,"data") <- harmonic_sample_data
 
-usethis::use_data(harmonic_sample_noisy, overwrite = TRUE)
+usethis::use_data(harmonic_sample_noisy, overwrite = TRUE, compress="xz")
 
 t <- seq(1024)
 harmonic_sample_data = ts( cos(t*0.13423167+0.00) + 1.3 * cos(t*0.119432+2.314) + 0.134994 + 0.4*cos(t*0.653167) + 0.11 * cos(t*0.78913498) , start=0, deltat=1) 
@@ -32,4 +32,4 @@ class(harmonic_sample_spectrum) <- 'discreteSpectrum'
 harmonic_sample <- harmonic_sample_spectrum
 attr(harmonic_sample,"data") <- harmonic_sample_data
 
-usethis::use_data(harmonic_sample, overwrite = TRUE)
+usethis::use_data(harmonic_sample, overwrite = TRUE, compress="xz")

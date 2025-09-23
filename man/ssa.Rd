@@ -5,18 +5,20 @@
 \alias{plot.SSAObject}
 \title{Singular spectrum analysis}
 \usage{
-ssa(X = X, N = length(X), M = M, Nrec = 10)
+ssa(x, N = length(x), M = M, Nrec = 10)
 
 \method{plot}{SSAObject}(x, ...)
 }
 \arguments{
-\item{X}{the input series (typically a numeric)}
+\item{x}{the input series (typically a numeric)}
 
 \item{N}{if provided,  the length of the input series to beconsiderd}
 
 \item{M}{the length of the sliding window}
 
 \item{Nrec}{number of components to be output}
+
+\item{...}{Further anguments passed to the standard plot function}
 }
 \value{
 a SSA object, compatible with the supplied plot function

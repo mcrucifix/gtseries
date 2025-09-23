@@ -4,10 +4,10 @@
 \alias{print.discreteSpectrum}
 \title{Print discrete spectrum}
 \usage{
-\method{print}{discreteSpectrum}(M, ...)
+\method{print}{discreteSpectrum}(x, ...)
 }
 \arguments{
-\item{M}{discreteSpectrum object}
+\item{x}{discreteSpectrum object}
 
 \item{...}{Further arguments}
 }

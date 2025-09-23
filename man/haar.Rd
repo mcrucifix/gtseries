@@ -13,6 +13,10 @@ haar(x, q = 2, discarded_scales = 4)
 \item{x}{the input series (typically a numeric)}
 
 \item{q}{the fluctuation order}
+
+\item{discarded_scales}{the number of discarded scales on the lowest frequency side of the dyadic scale}
+
+\item{...}{Further parameters passed to the plot function}
 }
 \description{
 Haar fluctuation spectrum after Lovejoy

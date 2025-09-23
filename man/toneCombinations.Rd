@@ -7,11 +7,11 @@
 toneCombinations(omegas, fractions = 1, keepPositives = TRUE)
 }
 \arguments{
+\item{omegas}{vector of references frequencies, optionally with rownames,}
+
 \item{fractions}{: defaults 1. Set 2 to include double-periods, and 3 triple-periods.}
 
 \item{keepPositives}{: if TRUE, then only keeps positive combinations of frequencies}
-
-\item{omegas:}{vector of references frequencies, optionally with rownames,}
 }
 \value{
 a vector with combination of tones and explicit rownames, using, if available, the

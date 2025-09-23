@@ -4,16 +4,14 @@
 \alias{plot.discreteSpectrum}
 \title{Plot discrete spectrum}
 \usage{
-\method{plot}{discreteSpectrum}(M, periods = FALSE, labels = NULL, ...)
+\method{plot}{discreteSpectrum}(x, ...)
 }
 \arguments{
-\item{M}{discreteSpectrum object}
+\item{x}{discreteSpectrum object}
 
-\item{periods}{If TRUE, will add a lower axis with period labels}
-
-\item{labels}{Labels to be set above the frequency peaks}
-
-\item{...}{Further graphical arguments}
+\item{...}{Further arguments passed through. May include:
+- `periods`: Add a period axis bar below the frequency axis. Defaults to FALSE
+- `labels`: if set, is passed to the standard plot function}
 }
 \description{
 Plots the amplitude spectrum of a discreteSpectrum object.

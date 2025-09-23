@@ -291,7 +291,7 @@ plot.wavelet <- function(x, resx = 400, resy = 300,
 #' @param wave A wavelet object.
 #' @return Data frame with frequency and power columns.
 #' @export
-powerspectrum.wavelet <- function(wave, ...) {
+powerspectrum.wavelet <- function(wave) {
   scale_vec <- attr(wave, "scale")
   period <- attr(wave, "period")
   time_vec <- attr(wave, "time")

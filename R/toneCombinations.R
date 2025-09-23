@@ -4,7 +4,7 @@
 #' explicit label names, up to order 3 (this could be made more flexible is the future)
 #'
 #' @importFrom RcppAlgos comboGeneral
-#' @param omegas: vector of references frequencies, optionally with rownames, 
+#' @param omegas vector of references frequencies, optionally with rownames, 
 #' @param keepPositives : if TRUE, then only keeps positive combinations of frequencies
 #' @param fractions : defaults 1. Set 2 to include double-periods, and 3 triple-periods. 
 #' @return a vector with combination of tones and explicit rownames, using, if available, the

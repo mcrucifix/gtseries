@@ -9,10 +9,9 @@
 #' @description Haar fluctuation spectrum after Lovejoy
 #' still needs to be documented
 #' currently requires n=2^i data points
-
-
 #' @param x the input series (typically a numeric)
 #' @param q the fluctuation order
+#' @param discarded_scales the number of discarded scales on the lowest frequency side of the dyadic scale
 #' @examples
 #' x <- rnorm(2048)
 #' xi1 <- haar(x, q = 1)
@@ -44,6 +43,7 @@ haar <- function(x, q = 2, discarded_scales = 4) {
 }
 
 #' @rdname haar
+#' @param ... Further parameters passed to the plot function
 #' @export
 plot.fluctuation_specturm <- function(x,...) {
   plot(attr(x, "scale")$x, attr(x, "scale")$y, log = "xy", xlab = "scale", ylab = "Amplitude")

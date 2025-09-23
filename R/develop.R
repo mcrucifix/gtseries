@@ -25,20 +25,21 @@ develop <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ..
 cis <- function(x) exp(1i * x)
 
 #' Discrete spectrum reconstruction
+#'
+#' Reconstruct a time series from a discreteSpectrum object.
+#'
 #' @param M discreteSpectrum object
 #' @param start see \code{develop}
 #' @param end see \code{develop}
 #' @param deltat see \code{develop}
 #' @param times see \code{develop}
-#' @param ... arguments passed through; may include:
-#'   \describe{
-#'     \item{dfunction}{trigonometrical function ('cos', 'sin', or 'cis')}
-#'     \item{max_freq}{maximum number of frequency to include}
-#'     \item{sum}{logical: sum components in reconstruction?}
-#'     \item{trendshift}{logical: account for trend and shift encoded in the object?}
-#'   }
-#' @note if none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`
-#' @return list of reconstructed components if sum=FALSE, full reconstructed time series otherwise
+#' @param ... Further arguments passed through. May include:
+#'   - `dfunction`: trigonometrical function (`cos`, `sin`, or `cis`)
+#'   - `max_freq`: maximum number of frequencies to include
+#'   - `sum`: logical; sum components in reconstruction?
+#'   - `trendshift`: logical; account for trend and shift encoded in the object?
+#' @note If none of times, start and deltat are supplied, will reconstruct based on the attribute `xdata`.
+#' @return List of reconstructed components if sum=FALSE, full reconstructed time series otherwise.
 #' @method develop discreteSpectrum
 #' @export
 develop.discreteSpectrum <- function(M, start = NULL, end = NULL, deltat = NULL, times = NULL, ...) {
@@ -107,24 +108,32 @@ develop.discreteSpectrum <- function(M, start = NULL, end = NULL, deltat = NULL,
 #'
 #' Converts a discreteSpectrum object into a data.frame.
 #' @param x discreteSpectrum object
+#' @param row.names kept for compatibility with as.data.frame S3 method
+#' @param optional kept for compatibility with as.data.frame S3 method
+#' @param ... passed to the data.frame function 
 #' @return Data.frame with columns Freq, Amp, Phases
 #' @export
-as.data.frame.discreteSpectrum <- function(x) {
-  data.frame(Freq = x$Freq, Amp = x$Amp, Phases = x$Phases)
+as.data.frame.discreteSpectrum <- function(x, row.names, optional, ...) {
+  data.frame(Freq = x$Freq, Amp = x$Amp, Phases = x$Phases, ... )
 }
 
 #' Plot discrete spectrum
 #'
 #' Plots the amplitude spectrum of a discreteSpectrum object.
-#' @param M discreteSpectrum object
-#' @param periods If TRUE, will add a lower axis with period labels
-#' @param labels Labels to be set above the frequency peaks
-#' @param ... Further graphical arguments
+#' @param x discreteSpectrum object
+#' @param ... Further arguments passed through. May include:
+#'   - `periods`: Add a period axis bar below the frequency axis. Defaults to FALSE
+#'   - `labels`: if set, is passed to the standard plot function
+#
 #' @export
-plot.discreteSpectrum <- function(M, periods = FALSE, labels = NULL, ...) {
-  plot(abs(M$Freq), abs(M$Amp), 'h', ylab = "Amplitudes", xlab = "", ...)
+plot.discreteSpectrum <- function(x, ...) {
+  args <- list('...')
+  labels <- args$labels
+  periods <- args$periods
+  if (is.null(periods)) periods <- FALSE
+  plot(abs(x$Freq), abs(x$Amp), 'h', ylab = "Amplitudes", xlab = "", ...)
   if (periods) {
-    frequencies <- pretty(range(M$Freq / (2 * pi)))
+    frequencies <- pretty(range(x$Freq / (2 * pi)))
     plabels <- as.character(1 / frequencies)
     if (0 %in% frequencies) plabels[which(frequencies == 0)] <- "\u221E"
     axis(1, line = 3, at = 2 * pi * frequencies, labels = plabels)
@@ -134,31 +143,31 @@ plot.discreteSpectrum <- function(M, periods = FALSE, labels = NULL, ...) {
     mtext("Rate", 1, 3)
   }
   if (!is.null(labels)) {
-    y_shift <- 0.05 * diff(range(M$Amp))
-    text(M$Freq, M$Amp, labels, srt = 90, adj = -0.4)
+    y_shift <- 0.05 * diff(range(x$Amp))
+    text(x$Freq, x$Amp, labels, srt = 90, adj = -0.4)
   }
 }
 
 #' Add lines to discrete spectrum plot
 #'
 #' Adds lines and points to the spectrum plot for a discreteSpectrum object.
-#' @param M discreteSpectrum object
+#' @param x discreteSpectrum object
 #' @param ... Further graphical arguments
 #' @export
-lines.discreteSpectrum <- function(M, ...) {
-  lines(abs(M$Freq), abs(M$Amp), "h", ...)
-  points(abs(M$Freq), abs(M$Amp), "p", ...)
+lines.discreteSpectrum <- function(x, ...) {
+  lines(abs(x$Freq), abs(x$Amp), "h", ...)
+  points(abs(x$Freq), abs(x$Amp), "p", ...)
 }
 
 #' Print discrete spectrum
 #'
 #' Prints a summary of the discreteSpectrum object.
-#' @param M discreteSpectrum object
+#' @param x discreteSpectrum object
 #' @param ... Further arguments
 #' @export
-print.discreteSpectrum <- function(M, ...) {
-  n <- nrow(as.data.frame(M))
+print.discreteSpectrum <- function(x, ...) {
+  n <- nrow(as.data.frame(x))
   to_print <- seq(min(10, n))
-  print.data.frame(cbind(as.data.frame(M)[to_print, ], Period = 2 * pi / M$Freq[to_print]))
+  print.data.frame(cbind(as.data.frame(x)[to_print, ], Period = 2 * pi / x$Freq[to_print]))
   if (n > 10) print(sprintf("... + %d other rows \n", n - 10))
 }

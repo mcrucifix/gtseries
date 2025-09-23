@@ -4,7 +4,7 @@
 \alias{powerspectrum.wavelet}
 \title{Power Spectrum of a Wavelet Transform}
 \usage{
-powerspectrum.wavelet(wave, ...)
+powerspectrum.wavelet(wave)
 }
 \arguments{
 \item{wave}{A wavelet object.}

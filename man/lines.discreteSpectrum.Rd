@@ -4,10 +4,10 @@
 \alias{lines.discreteSpectrum}
 \title{Add lines to discrete spectrum plot}
 \usage{
-\method{lines}{discreteSpectrum}(M, ...)
+\method{lines}{discreteSpectrum}(x, ...)
 }
 \arguments{
-\item{M}{discreteSpectrum object}
+\item{x}{discreteSpectrum object}
 
 \item{...}{Further graphical arguments}
 }
