@@ -8,6 +8,7 @@
 #' @param deltat If supplied, the time interval (used with `start` and `end`)
 #' @param times If supplied, explicit times for the decomposition
 #' @param ... Further arguments passed to methods
+#' @importFrom stats is.ts
 #' @note Place holder for type-specific develop functions.
 #' @return Nothing; method dispatches to appropriate method.
 #' @export

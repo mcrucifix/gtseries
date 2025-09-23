@@ -16,28 +16,27 @@ approx_ts(
 )
 }
 \arguments{
-\item{data}{The data input, typically a  dataframe,
-with two columns}
+\item{data}{The data input, typically a dataframe with two columns}
 
 \item{tcoord}{The name of the column name of the time coordinate. Defaults to "x"}
 
 \item{dcoord}{The name of the column name of the data coordinate. Defaults to "y"}
 
-\item{scale}{Time scaling (the coordinate "tcoord" will be divided by `scale`.}
+\item{scale}{Time scaling (the coordinate "tcoord" will be divided by `scale`).}
 
 \item{n}{(defaults to 2048) is the number of data points in the output}
 
 \item{thin}{Discards data that are sampled with a time space less than 0.5 times the time resolution in the output}
 
-\item{spline}{: if True, the standard `spline` routine will be used, otherwise, `approx'}
+\item{spline}{If TRUE, the standard `spline` routine will be used, otherwise, `approx`}
 
-\item{xlim}{: if provided, brackets the time output}
+\item{xlim}{If provided, brackets the time output}
 }
 \value{
 a time series R object
 }
 \description{
-Uses standard R routine 'approx' or 'spline' to generate an evenly-spaced time series
+Uses standard R routines 'approx' or 'spline' to generate an evenly-spaced time series
 based on data supplied on a time coordinate grid.
 }
 \author{

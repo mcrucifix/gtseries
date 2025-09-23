@@ -21,7 +21,8 @@
 #' @param Nrec number of components to be output
 #' @importFrom sfsmisc axTexpr
 #' @importFrom sfsmisc eaxis
-
+#' @importFrom graphics points
+#' @importFrom stats is.ts lm toeplitz
 #' @references
 #' \insertRef{Ghil02aa}{gtseries}
 #' \insertRef{VAUTARD89aa}{gtseries}

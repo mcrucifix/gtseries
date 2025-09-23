@@ -12,6 +12,7 @@
 #' @param x the input series (typically a numeric)
 #' @param q the fluctuation order
 #' @param discarded_scales the number of discarded scales on the lowest frequency side of the dyadic scale
+#' @importFrom stats lm
 #' @examples
 #' x <- rnorm(2048)
 #' xi1 <- haar(x, q = 1)

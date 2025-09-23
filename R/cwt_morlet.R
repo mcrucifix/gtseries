@@ -10,6 +10,7 @@
 #'
 #' @importFrom stats fft deltat time ts qnorm
 #' @importFrom graphics axis image lines par text
+#' @importFrom sfsmisc axis.log10
 #' @importFrom fields image.plot
 #' @importFrom signal unwrap
 #' @keywords internal

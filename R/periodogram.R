@@ -1,13 +1,43 @@
-#' Periodogram
+#' Periodogram (for real and complex time series)
 #'
-#' Simple periodogram
-#' @param x : numeric vector or time series object
-#' @importFrom stats start
-#' @importFrom stats as.ts
-#' @author Michel Crucifix for the R code
-#
-
+#' Computes the periodogram for a time series. The default \code{periodogram}
+#' is for real-valued time series (returns only non-negative frequencies).
+#' The alias \code{periodogram_complex} is provided for complex-valued time
+#' series, and returns both positive and negative frequencies.
+#'
+#' @param x Numeric vector or time series object. For \code{periodogram_complex},
+#' may be complex-valued.
+#' @return A list containing:
+#'   \describe{
+#'     \item{Freq}{Frequencies. For \code{periodogram}, non-negative; for
+#'       \code{periodogram_complex}, both negative and positive.}
+#'     \item{Power}{Power spectral density.}
+#'     \item{Phase}{Phase spectrum.}
+#'   }
+#' @details
+#' \code{periodogram} computes the simple periodogram for real-valued signals,
+#' returning only the positive frequencies.
+#'
+#' \code{periodogram_complex} is an alias for use with complex-valued signals.
+#' It returns both positive and negative frequencies, as is standard for
+#' Fourier transforms of complex time series.
+#'
+#' @aliases periodogram periodogram_complex
+#' @author Michel Crucifix
+#' @seealso \code{\link{plot.periodogram}}, \code{\link{plot.periodogram_complex}}
+#' @examples
+#' # Real-valued signal
+#' x <- rnorm(128)
+#' pg <- periodogram(x)
+#' plot(pg)
+#'
+#' # Complex-valued signal
+#' y <- rnorm(128) + 1i * rnorm(128)
+#' pgc <- periodogram_complex(y)
+#' plot(pgc)
+#'
 #' @export periodogram
+#' @export periodogram_complex
 periodogram <- function(x){
   x = stats::as.ts(x)
   dt = deltat(x)
@@ -23,7 +53,6 @@ periodogram <- function(x){
   return(OUT)
 }
 
-#' @export periodogram_complex
 periodogram_complex <- function(x){
   x = stats::as.ts(x)
   dt = deltat(x)

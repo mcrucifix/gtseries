@@ -17,7 +17,8 @@
 #' \insertRef{Ghil02aa}{gtseries}
 #' \insertRef{pardoiguzquiza06aa}{gtseries}
 #' \insertRef{pardo-iguzquiza21aa}{gtseries}
-#' @importFrom graphics mtext
+#' @importFrom graphics mtext 
+#' @importFrom sfsmisc axis.period axis.frequency
 #' @importFrom stats ar
 #' @importFrom stats coef
 #' @export  mem

@@ -5,6 +5,7 @@
 #' @param seglength Length of moving segment. Both x length and seglenthm are adviced to be a power of 2 (faster)
 #' @param ...  passed to mmft
 #' @return a `mmfft` object
+#' @importFrom stats ts
 #' @note  in the current implementation, the right-hand-side of x that is left after an integer division 
 #'        by seglenth is discarded
 #' @author Michel Crucifix

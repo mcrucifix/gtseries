@@ -2,8 +2,9 @@
 % Please edit documentation in R/periodogram.R
 \name{periodogram}
 \alias{periodogram}
+\alias{periodogram_complex}
 \alias{plot.periodogram}
-\title{Periodogram}
+\title{Periodogram (for real and complex time series)}
 \usage{
 periodogram(x)
 
@@ -22,11 +23,45 @@ periodogram(x)
 }}
 }
 \value{
+A list containing:
+  \describe{
+    \item{Freq}{Frequencies. For \code{periodogram}, non-negative; for
+      \code{periodogram_complex}, both negative and positive.}
+    \item{Power}{Power spectral density.}
+    \item{Phase}{Phase spectrum.}
+  }
+
 The plot
 }
 \description{
-Simple periodogram
+Computes the periodogram for a time series. The default \code{periodogram}
+is for real-valued time series (returns only non-negative frequencies).
+The alias \code{periodogram_complex} is provided for complex-valued time
+series, and returns both positive and negative frequencies.
+}
+\details{
+\code{periodogram} computes the simple periodogram for real-valued signals,
+returning only the positive frequencies.
+
+\code{periodogram_complex} is an alias for use with complex-valued signals.
+It returns both positive and negative frequencies, as is standard for
+Fourier transforms of complex time series.
+}
+\examples{
+# Real-valued signal
+x <- rnorm(128)
+pg <- periodogram(x)
+plot(pg)
+
+# Complex-valued signal
+y <- rnorm(128) + 1i * rnorm(128)
+pgc <- periodogram_complex(y)
+plot(pgc)
+
+}
+\seealso{
+\code{\link{plot.periodogram}}, \code{\link{plot.periodogram_complex}}
 }
 \author{
-Michel Crucifix for the R code
+Michel Crucifix
 }
