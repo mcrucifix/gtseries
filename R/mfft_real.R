@@ -1,69 +1,116 @@
 pisquare <- pi^2
 
 Q <- function(w_T) {
-  sin(w_T) / (w_T) * (pisquare) / (pisquare - (w_T * w_T))
+        sin(w_T) / (w_T) * (pisquare) / (pisquare - (w_T * w_T))
 }
 Q_prime <- function(y) {
-  ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y * (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
+        ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y * (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
 }
 Q_second_0 <- 2 / pisquare - 1. / 3.
 
-mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL, min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
-  # nu can be provided, in which case the frequencies
-  # are considered to be given
-  if (!is.null(nu)) {
-    nu_temp <- unlist(lapply(nu, function(a) if (a == 0) {
-      return(a)
-    } else {
-      return(c(a, -a))
-    }))
-    phase <- unlist(lapply(nu, function(a) if (a == 0) {
-      return(0)
-    } else {
-      return(c(0, pi / 2))
-    }))
-    nu <- nu_temp
-    if (length(nu) < 2 * n_freq) {
-      nu[2 * n_freq] <- NA
-      phase[2 * n_freq] <- NA
-    }
-  } else {
-    nu <- rep(NA, 2 * n_freq)
-    phase <- rep(NA, 2 * n_freq)
-  }
 
-  N <- length(x_data)
-  T <- N / 2
-  hann <- function(N) {
-    return(1 - cos(2 * pi * seq(0, (N - 1)) / (N)))
-  }
-  h_N <- hann(N)
-  t <- seq(N) - 1
-  power <- function(x) (Mod(fft(x))^2)[1:floor((N - 1) / 2)]
 
-  h_prod <- function(x, y) sum(x * h_N * y) / N
+#' Internal workhorse of the modified Fourier transform for real series
+#'
+#' Iteratively extracts dominant frequencies from a real-valued time series
+#' using a modified Fourier transform with frequency correction. The function
+#' applies a Hanning window to the data, and amplitudes are renormalised through
+#' a Gram–Schmidt procedure based on cross-products of Fourier components.
+#' The cross-products can be computed either via analytical approximation
+#' (faster, following Sidlichovsky and Nesvorny) or explicitly by numerical
+#' integration.
+#'
+#' If frequencies \code{nu} are supplied, the routine uses them directly;
+#' otherwise, it iteratively maximises the Fourier transform using golden
+#' section search (via the \pkg{cmna} package or optional C code). The
+#' function is typically called from [mfft_real()] once, and possibly a second
+#' time to refine amplitudes and frequencies iteratively.
+#'
+#' @param x_data Numeric vector or time series, the real-valued signal to analyse.
+#' @param n_freq Integer. Number of frequencies to extract.
+#' @param fast Logical (default \code{TRUE}). If \code{TRUE}, use analytical
+#'   approximations for Fourier component cross-products; if \code{FALSE},
+#'   compute them numerically.
+#' @param nu Optional numeric vector of frequencies. If provided, these are used
+#'   instead of searching for maxima in the Fourier transform.
+#' @param min_freq,max_freq Optional numeric scalars. Real, positive bounds
+#'   for the angular frequencies considered in the search. Units depend on
+#'   the sampling of \code{x_data}.
+#' @param use_C_code Logical (default \code{TRUE}). If \code{TRUE}, uses the
+#'   compiled C implementation of the golden section search (mainly for testing
+#'   or speed); otherwise uses the \pkg{cmna} package's implementation.
+#'
+#' @return A \code{data.frame} with columns:
+#'   \itemize{
+#'     \item \code{nu}: estimated angular frequencies
+#'     \item \code{amp}: amplitudes of the extracted components
+#'     \item \code{phase}: corresponding phases
+#'   }
+#' The number of rows equals \code{n_freq}.
+#'
+#' @details This function assumes by design that the input series is real and
+#' applies a Hanning window to the data. The iterative Gram–Schmidt
+#' renormalisation ensures orthogonality of extracted Fourier components.
+#'
+#' @references
+#' \insertRef{sidlichovsky97aa}{gtseries}
+#'
+#' @author Michel Crucifix
+#' @keywords internal
+mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
+                         min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
+        if (!is.null(nu)) {
+                nu_temp <- unlist(lapply(nu, function(a) if (a == 0) {
+                                                 return(a)
+} else {
+        return(c(a, -a))
+}))
+                phase <- unlist(lapply(nu, function(a) if (a == 0) {
+                                               return(0)
+} else {
+        return(c(0, pi / 2))
+}))
+                nu <- nu_temp
+                if (length(nu) < 2 * n_freq) {
+                        nu[2 * n_freq] <- NA
+                        phase[2 * n_freq] <- NA
+                }
+        } else {
+                nu <- rep(NA, 2 * n_freq)
+                phase <- rep(NA, 2 * n_freq)
+        }
 
-  S <- rep(0, 2 * n_freq)
-  Prod <- rep(0, 2 * n_freq)
-  amp <- rep(NA, 2 * n_freq)
-  A <- matrix(0, 2 * n_freq, 2 * n_freq)
-  Q_matrix <- matrix(0, 2 * n_freq, 2 * n_freq)
-  f <- list()
-  x <- list()
-  B <- list()
-  freqs <- 2. * pi * seq(0, (N - 1)) / N
-  x[[1]] <- x_data
+        N <- length(x_data)
+        N2 <- N / 2
+        hann <- function(N) {
+                return(1 - cos(2 * pi * seq(0, (N - 1)) / (N)))
+        }
+        h_N <- hann(N)
+        t <- seq(N) - 1
+        power <- function(x) (Mod(fft(x))^2)[1:floor((N - 1) / 2)]
 
-  for (m in seq(2 * n_freq)) {
-    hx <- h_N * x[[m]]
-    if (!(m == 2 * n_freq && is.na(nu[m]))) {
-      if (is.na(nu[m])) {
-        if (!use_C_code) {
+        h_prod <- function(x, y) sum(x * h_N * y) / N
+
+        S <- rep(0, 2 * n_freq)
+        Prod <- rep(0, 2 * n_freq)
+        amp <- rep(NA, 2 * n_freq)
+        A <- matrix(0, 2 * n_freq, 2 * n_freq)
+        Q_matrix <- matrix(0, 2 * n_freq, 2 * n_freq)
+        f <- list()
+        x <- list()
+        B <- list()
+        freqs <- 2. * pi * seq(0, (N - 1)) / N
+        x[[1]] <- x_data
+
+        for (m in seq(2 * n_freq)) {
+                hx <- h_N * x[[m]]
+                if (!(m == 2 * n_freq && is.na(nu[m]))) {
+                        if (is.na(nu[m])) {
+                                if (!use_C_code) {
           f_base <- freqs[which.max(power(hx))]
           brackets <- c(f_base - pi / N, f_base + pi / N)
           brackets[1] <- max(min_freq, brackets[1])
           brackets[2] <- min(max_freq, brackets[2])
-          thx <- t(hx)
 
           tomax <- function(t) {
             function(f) {
@@ -101,8 +148,8 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL, min_freq = NULL
 
       if (fast) {
         for (i in seq(m)) {
-          num <- (nu[m] - nu[i]) * T
-          nup <- (nu[m] + nu[i]) * T
+          num <- (nu[m] - nu[i]) * N2
+          nup <- (nu[m] + nu[i]) * N2
           phim <- (phase[m] - phase[i])
           phip <- (phase[m] + phase[i])
 
@@ -161,8 +208,6 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL, min_freq = NULL
   amp[1:m_max] <- 0
   for (m in seq(m_max)) for (j in seq(m)) amp[j] <- amp[j] + S[m] * A[m, j]
 
-  amp_2m <- amp
-
   for (m in seq(m_max)) {
     if ((m > 1) && (nu[m - 1] == -nu[m])) {
       phase[m] <- Arg(-1i * amp[m] + amp[m - 1])
@@ -176,7 +221,10 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL, min_freq = NULL
   nu <- -nu[valid_frequencies]
   amp <- amp[valid_frequencies]
   phase <- phase[valid_frequencies]
-  if (length(valid_frequencies) != n_freq) message(sprintf("something goes wrong : %i valid frequencies, and n_freq = %i", valid_frequencies, n_freq))
+  if (length(valid_frequencies) != n_freq) {
+          message(sprintf("something goes wrong : %i valid frequencies, and n_freq = %i",
+                          valid_frequencies, n_freq))
+  }
 
   OUT <- data.frame(nu = nu, amp = amp, phase = phase)
   return(OUT)
@@ -220,7 +268,7 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL, min_freq = NULL
 #'
 #' @export mfft_real
 mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
-  if (correction == 4) "this correction scheme is currently not implemented for real time series"
+  if (correction == 3) "this correction scheme is currently not implemented for real time series"
   N <- length(x_data)
   N2 <- N / 2.
   x_data <- stats::as.ts(x_data)
