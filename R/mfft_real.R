@@ -168,19 +168,25 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
         for (j in seq(m - 1)) for (i in seq(j, (m - 1))) A[m, j] <- A[m, j] - f_m_bi[i] * A[i, j]
       }
 
-      norm <- 0
-      if (m > 1) {
-        for (i in seq(m)) {
-          norm <- norm + (A[m, i] * A[m, i] * Q_matrix[i, i])
-          if (i > 1) {
-            for (j in seq(i - 1)) {
-              norm <- norm + 2 * A[m, i] * A[m, j] * Q_matrix[i, j]
-            }
-          }
-        }
-      } else {
-        norm <- A[m, m] * A[m, m] * Q_matrix[m, m]
-      }
+      # norm <- 0
+      # if (m > 1) {
+      #   for (i in seq(m)) {
+      #     norm <- norm + (A[m, i] * A[m, i] * Q_matrix[i, i])
+      #     if (i > 1) {
+      #       for (j in seq(i - 1)) {
+      #         norm <- norm + 2 * A[m, i] * A[m, j] * Q_matrix[i, j]
+      #       }
+      #     }
+      #   }
+      # } else {
+      #   norm <- A[m, m] * A[m, m] * Q_matrix[m, m]
+      # }
+      #
+
+      norm <- Q_matrix[m,m]
+      if (m > 1)  for (i in seq(m-1))  norm <- norm - (f_m_bi[i])^2
+
+      # print(sprintf("NORM = %9.4g ", norm - norm2))
 
       A[m, ] <- A[m, ] / sqrt(norm)
 
