@@ -1,10 +1,12 @@
 pisquare <- pi^2
+pihalf   <- pi / 2
 
 Q <- function(w_T) {
         sin(w_T) / (w_T) * (pisquare) / (pisquare - (w_T * w_T))
 }
 Q_prime <- function(y) {
-        ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y * (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
+        ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y *
+               (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
 }
 Q_second_0 <- 2 / pisquare - 1. / 3.
 
@@ -57,34 +59,24 @@ Q_second_0 <- 2 / pisquare - 1. / 3.
 #'
 #' @author Michel Crucifix
 #' @keywords internal
-mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
+mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
                          min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
         if (!is.null(nu)) {
-                nu_temp <- unlist(lapply(nu, function(a) if (a == 0) {
-                                                 return(a)
-} else {
-        return(c(a, -a))
-}))
-                phase <- unlist(lapply(nu, function(a) if (a == 0) {
-                                               return(0)
-} else {
-        return(c(0, pi / 2))
-}))
+                nu_temp <- unlist(lapply(nu, function(a) if (a == 0) a else c(a, -a)))
+                phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf )))
                 nu <- nu_temp
                 if (length(nu) < 2 * n_freq) {
                         nu[2 * n_freq] <- NA
                         phase[2 * n_freq] <- NA
                 }
-        } else {
+        }   else {
                 nu <- rep(NA, 2 * n_freq)
                 phase <- rep(NA, 2 * n_freq)
         }
 
         N <- length(x_data)
         N2 <- N / 2
-        hann <- function(N) {
-                return(1 - cos(2 * pi * seq(0, (N - 1)) / (N)))
-        }
+        hann <- function(N) (1 - cos(2 * pi * seq(0, (N - 1)) / (N)))
         h_N <- hann(N)
         t <- seq(N) - 1
         power <- function(x) (Mod(fft(x))^2)[1:floor((N - 1) / 2)]
@@ -136,7 +128,7 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
         if (f_max > freqs[2] / 2) {
           phase[m] <- 0.
           nu[m] <- f_max
-          phase[m + 1] <- pi / 2.
+          phase[m + 1] <- pihalf
           nu[m + 1] <- -f_max
         } else {
           phase[m] <- 0.
@@ -254,7 +246,8 @@ mfft_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 #'        3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)
 #' @param n_freq The number of frequencies returned, must be smaller than the length of `x_data`.
 #' @param fast (default = TRUE) Uses analytical formulations for the crossproducts involving sines and cosines.
-#'        Note: this is not really faster because the bottleneck is actually the golden section search, but more elegant.
+#'        Note: this is not really faster because the bottleneck is actually the golden section search,
+#'        but more elegant.
 #' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Amp", and "Phases".
 #' @author Michel Crucifix
 #' @references
@@ -279,13 +272,13 @@ mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, corr
 
   start_x <- stats::start(x_data)[1]
   N <- length(x_data)
-  OUT <- mfft_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
+  OUT <- mfft_real_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
 
   if (correction == 2) {
     x_data_synthetic <- rep(0, N)
     t <- seq(N) - 1
     for (i in seq(n_freq)) x_data_synthetic <- x_data_synthetic + OUT$amp[i] * cos(OUT$nu[i] * t + OUT$phase[i])
-    OUT2 <- mfft_analyse(x_data_synthetic, n_freq, fast, NULL, my_min_freq, my_max_freq)
+    OUT2 <- mfft_real_analyse(x_data_synthetic, n_freq, fast, NULL, my_min_freq, my_max_freq)
     OUT$nu <- OUT$nu + (OUT$nu - OUT2$nu)
     OUT$amp <- OUT$amp + (OUT$amp - OUT2$amp)
     OUT$phase <- OUT$phase + (OUT$phase - OUT2$phase)
@@ -305,7 +298,7 @@ mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, corr
 
       OUT$nu[j] <- OUT$nu[j] - epsilon
     }
-    OUT <- mfft_analyse(x_data, n_freq, fast, nu = OUT$nu, my_min_freq, my_max_freq)
+    OUT <- mfft_real_analyse(x_data, n_freq, fast, nu = OUT$nu, my_min_freq, my_max_freq)
   }
 
   OUT$nu <- OUT$nu / dt
