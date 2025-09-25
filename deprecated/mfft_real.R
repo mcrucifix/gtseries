@@ -1,243 +1,336 @@
-calc_amp <- function(x, nfreq, Fs){
-  N <- length(x)
-  t <- seq(N)
-  xx = matrix(rep(1,N),N,1)
-  freqs = 2.*pi*seq(0,(N-1))/N
-  power <- function(x) (Mod(fft(x))^2)[1:floor((N-1)/2)]
-  residu <- x  - mean(x)
-  for (j in seq(nfreq)) {
- 
-# temps de calcul peut etre gagne en C
+pisquare <- pi^2
+pihalf   <- pi / 2
+
+Q <- function(w_T) {
+        sin(w_T) / (w_T) * (pisquare) / (pisquare - (w_T * w_T))
+}
+Q_prime <- function(y) {
+        ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y *
+               (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
+}
+Q_second_0 <- 2 / pisquare - 1. / 3.
 
 
-    if (Fs[j] == (-1) ){
-       hresidu = gsignal::hann(N)*residu
-       fbase <- freqs[which.max(power(hresidu))]
-       brackets <- c(fbase-pi/N, fbase+pi/N);
-       thresidu <- t(hresidu)
-       fmax = cmna::goldsectmax(function(f) 
-                          (thresidu %*% cos(f*t))^2 + (thresidu %*% sin(f*t))^2, 
-                          brackets[1], brackets[2], tol=1.e-10, m=9999)
-       Fs[j] = fmax
-    } 
- 
-     xx <- cbind(xx, cos(Fs[j]*t), sin(Fs[j]*t))
-     
-# cette partie doit pouvoir etre acceleree en tirant partit du fait
-# que l'expression analytitque de xx%*xx est connue
-# voir non-working code fmft_real.C
-# Il faut utiliser l'integrale connue int_0^2pi cos(x)hann(x) 
-# on utilise: cos(a)cos(b) = 0.5*(cos(a+b) - cos(a-b)) etc pour toutes les comb. cossin
-# et int_0^2T cos(wx) = 1/W(sin[2T]-sin[0]) , ou si on applique le produit scalaire avec fenetre Hann
-# et int_0^2T cos(wx)Hann[x] = (pi^2)(pi^2-w^2T^2)(sin(wT)/wT) * (coswT)
-# et int_0^2T sin(wx)Hann[x] = (pi^2)(pi^2-w^2T^2)(sin(wT)/wT) * (sin(wT))
- # sin(wT)/(wT) = 1
- # et on se rappelle que la decomposition gramschmidt
- # c'est simplement, avec x_i le ie vecteur
- # xn_1 = x_1 / ||x_1||  
- # xn_(i+1) = x_(i+1) - sum_(j=1,i) x_(i+1)%*%x(i)/||x_(i+1)||
-# en C, cela doit reduire le temps de calcul considerablement
 
+#' Internal workhorse of the modified Fourier transform for real series
+#'
+#' Iteratively extracts dominant frequencies from a real-valued time series
+#' using a modified Fourier transform with frequency correction. The function
+#' applies a Hanning window to the data, and amplitudes are renormalised through
+#' a Gram–Schmidt procedure based on cross-products of Fourier components.
+#' The cross-products can be computed either via analytical approximation
+#' (faster, following Sidlichovsky and Nesvorny) or explicitly by numerical
+#' integration.
+#'
+#' If frequencies \code{nu} are supplied, the routine uses them directly;
+#' otherwise, it iteratively maximises the Fourier transform using golden
+#' section search (via the \pkg{cmna} package or optional C code). The
+#' function is typically called from [mfft_real()] once, and possibly a second
+#' time to refine amplitudes and frequencies iteratively.
+#'
+#' @param x_data Numeric vector or time series, the real-valued signal to analyse.
+#' @param n_freq Integer. Number of frequencies to extract.
+#' @param fast Logical (default \code{TRUE}). If \code{TRUE}, use analytical
+#'   approximations for Fourier component cross-products; if \code{FALSE},
+#'   compute them numerically.
+#' @param nu Optional numeric vector of frequencies. If provided, these are used
+#'   instead of searching for maxima in the Fourier transform.
+#' @param min_freq,max_freq Optional numeric scalars. Real, positive bounds
+#'   for the angular frequencies considered in the search. Units depend on
+#'   the sampling of \code{x_data}.
+#' @param use_C_code Logical (default \code{TRUE}). If \code{TRUE}, uses the
+#'   compiled C implementation of the golden section search (mainly for testing
+#'   or speed); otherwise uses the \pkg{cmna} package's implementation.
+#'
+#' @return A \code{data.frame} with columns:
+#'   \itemize{
+#'     \item \code{nu}: estimated angular frequencies
+#'     \item \code{amp}: amplitudes of the extracted components
+#'     \item \code{phase}: corresponding phases
+#'   }
+#' The number of rows equals \code{n_freq}.
+#'
+#' @details This function assumes by design that the input series is real and
+#' applies a Hanning window to the data. The iterative Gram–Schmidt
+#' renormalisation ensures orthogonality of extracted Fourier components.
+#'
+#' @references
+#' \insertRef{sidlichovsky97aa}{gtseries}
+#'
+#' @author Michel Crucifix
+#' @keywords internal
+mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
+                         min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
+        if (!is.null(nu)) {
+                nu_temp <- unlist(lapply(nu, function(a) if (a == 0) a else c(a, -a)))
+                phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf)))
+                nu <- nu_temp
+                if (length(nu) < 2 * n_freq) {
+                        nu[2 * n_freq] <- NA
+                        phase[2 * n_freq] <- NA
+                }
+        }   else {
+                nu <- rep(NA, 2 * n_freq)
+                phase <- rep(NA, 2 * n_freq)
+        }
 
-     B <- pracma::gramSchmidt(xx)$Q
-     Coefs = t(xx) %*% B
-     aa <- as.numeric(residu) %*% B
+        N <- length(x_data)
+        N2 <- N / 2
+        hann <- function(N) (1 - cos(2 * pi * seq(0, (N - 1)) / (N)))
+        h_N <- hann(N)
+        t <- seq(N) - 1
+        power <- function(x) (Mod(fft(x))^2)[1:floor((N - 1) / 2)]
 
-     signal <- B %*% t(aa)
-     residu <- residu - signal
+        h_prod <- function(x, y) sum(x * h_N * y) / N
+
+        S <- rep(0, 2 * n_freq)
+        Prod <- rep(0, 2 * n_freq)
+        amp <- rep(NA, 2 * n_freq)
+        A <- matrix(0, 2 * n_freq, 2 * n_freq)
+        Q_matrix <- matrix(0, 2 * n_freq, 2 * n_freq)
+        f <- list()
+        x <- list()
+        freqs <- 2. * pi * seq(0, (N - 1)) / N
+        x[[1]] <- x_data
+
+        for (m in seq(2 * n_freq)) {
+                hx <- h_N * x[[m]]
+                if (!(m == 2 * n_freq && is.na(nu[m]))) {
+                        if (is.na(nu[m])) {
+                                if (!use_C_code) {
+          f_base <- freqs[which.max(power(hx))]
+          brackets <- c(f_base - pi / N, f_base + pi / N)
+          brackets[1] <- max(min_freq, brackets[1])
+          brackets[2] <- min(max_freq, brackets[2])
+
+          tomax <- function(t) {
+            function(f) {
+              ft <- f * t
+              a <- hx %*% cbind(cos(ft), sin(ft))
+              a[1] * a[1] + a[2] * a[2]
+            }
+          }
+          f_max <- cmna::goldsectmax(tomax(t),
+            brackets[1], brackets[2],
+            tol = 1.e-10, m = 9999
+          )
+
+        } else {
+          local_x_data <- as.double(x[[m]])
+          OUT <- .C("fastgsec", as.double(min_freq), as.double(max_freq),
+            as.integer(N), local_x_data, as.double(rep(0, N)),
+            out_freq = 0., DUP = TRUE
+          )
+          f_max <- OUT$out_freq
+        }
+
+        if (f_max > freqs[2] / 2) {
+          phase[m] <- 0.
+          nu[m] <- f_max
+          phase[m + 1] <- pihalf
+          nu[m + 1] <- -f_max
+        } else {
+          phase[m] <- 0.
+          nu[m] <- 0.
+        }
+      }
+
+      f[[m]] <- cos(nu[m] * t + phase[m])
+
+      if (fast) {
+        for (i in seq(m)) {
+          num <- (nu[m] - nu[i]) * N2
+          nup <- (nu[m] + nu[i]) * N2
+          phim <- (phase[m] - phase[i])
+          phip <- (phase[m] + phase[i])
+
+          Qm <- ifelse(num == 0, 1, Q(num))
+          Qp <- ifelse(nup == 0, 1, Q(nup))
+          cosm <- cos(phim) * cos(num) * Qm
+          sinm <- sin(phim) * sin(num) * Qm
+          cosp <- cos(phip) * cos(nup) * Qp
+          sinp <- sin(phip) * sin(nup) * Qp
+
+          Q_matrix[m, i] <- 0.5 * (cosm + cosp - sinm - sinp)
+        }
+      } else {
+        for (i in seq(m)) {
+          Q_matrix[m, i] <- h_prod(f[[m]], f[[i]])
+        }
+      }
+
+      A[m, ] <- 0
+      A[m, m] <- 1.
+      if (m > 1) {
+        f_m_bi <- rep(0, (m - 1))
+        for (j in seq(m - 1)) for (i in seq(j)) f_m_bi[j] <- f_m_bi[j] + A[j, i] * Q_matrix[m, i]
+        for (j in seq(m - 1)) for (i in seq(j, (m - 1))) A[m, j] <- A[m, j] - f_m_bi[i] * A[i, j]
+      }
+
+      # norm <- 0
+      # if (m > 1) {
+      #   for (i in seq(m)) {
+      #     norm <- norm + (A[m, i] * A[m, i] * Q_matrix[i, i])
+      #     if (i > 1) {
+      #       for (j in seq(i - 1)) {
+      #         norm <- norm + 2 * A[m, i] * A[m, j] * Q_matrix[i, j]
+      #       }
+      #     }
+      #   }
+      # } else {
+      #   norm <- A[m, m] * A[m, m] * Q_matrix[m, m]
+      # }
+      #
+
+      norm <- Q_matrix[m, m]
+      if (m > 1)  for (i in seq(m-1))  norm <- norm - (f_m_bi[i])^2
+
+      # print(sprintf("NORM = %9.4g ", norm - norm2))
+
+      A[m, ] <- A[m, ] / sqrt(norm)
+
+      Prod[m] <- h_prod(x[[1]], f[[m]])
+
+      S[m] <- 0.
+      for (j in seq(m)) S[m] <- S[m] + Prod[j] * A[m, j]
+
+      x[[m + 1]] <- x[[m]]
+      for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * A[m, j] * f[[j]]
+    }
   }
-  
-  aa <- as.numeric(x) %*% B
-  sol = solve(t(Coefs), t(aa))
-  sol1 <- matrix(sol[-1],2, nfreq)
-  
-  Freqs <- c(0,Fs)
-  amps <- c(sol[1], sqrt ( apply(sol1^2, 2, sum)  ))
-  Phases <- -c(0, ( apply(sol1, 2, function(i) Arg(i[1] + 1i*i[2])  )))
- 
 
-  OUT = data.frame(Freq=Freqs, Amp=amps, Phases=Phases) 
-  attr(OUT,"class") = "mfft_deco"
+  m_max <- 2 * n_freq
+  if (is.na(nu[m_max])) m_max <- m_max - 1
+
+  amp[1:m_max] <- 0
+  for (m in seq(m_max)) for (j in seq(m)) amp[j] <- amp[j] + S[m] * A[m, j]
+
+  for (m in seq(m_max)) {
+    if ((m > 1) && (nu[m - 1] == -nu[m])) {
+      phase[m] <- Arg(-1i * amp[m] + amp[m - 1])
+      amp[m] <- sqrt(amp[m - 1]^2 + amp[m]^2)
+      amp[m - 1] <- NA
+      phase[m - 1] <- NA
+    }
+  }
+
+  valid_frequencies <- which(!is.na(amp))
+  nu <- -nu[valid_frequencies]
+  amp <- amp[valid_frequencies]
+  phase <- phase[valid_frequencies]
+  if (length(valid_frequencies) != n_freq) {
+          message(sprintf("something goes wrong : %i valid frequencies, and n_freq = %i",
+                          valid_frequencies, n_freq))
+  }
+
+  OUT <- data.frame(nu = nu, amp = amp, phase = phase)
   return(OUT)
 }
 
 
-
-#' Modified Fourier transform  for real series
+#' Frequency Modified Fourier transform for real series
 #'
 #' R-coded version of the Modified Fourier Transform
-#' with frequency  correction, adapted to R. 
-#' much slower than mfft (for complex numbers) as the latter is
+#' with frequency correction, adapted to R.
+#' Much slower than `mfft` (for complex numbers) as the latter is
 #' mainly written in C, but is physically
 #' more interpretable if signal is real, because
-#' it is designed to have no imaginary part in the residual
-#' A C-version should be supplied one day. 
+#' it is designed to have no imaginary part in the residual.
+#'
+#' A C-version should be supplied one day.
 #'
 #' @importFrom cmna goldsectmax
-#' @importFrom pracma gramSchmidt
-#' @importFrom gsignal hann
-#' @param xdata The data provided either as a time series (advised), or as a vector. 
-#' @param nfreq is the number of frequencies returned, must be smaller that the length of  xdata.
+#' @param x_data The data provided either as a time series (advised), or as a vector.
+#' @param min_freq,max_freq If provided, bracket the angular frequencies to be probed.
+#'        Note: these are angular velocities (\eqn{2\pi / \mathrm{period}}), expressed in time-inverse units,
+#'        with the time resolution encoded in `x_data` if the latter is a time series.
+#'        The default for `min_freq` is 0, and for `max_freq` is \eqn{\pi}.
+#' @param correction  0: no frequency correction (equivalent to Laskar);
+#'        1: frequency correction using linear approximation;
+#'        2: frequency correction using synthetic data;
+#'        3: second order-correction using synthetic data (all documented in the Sidlichovsky and Nesvorny reference)
+#' @param n_freq The number of frequencies returned, must be smaller than the length of `x_data`.
+#' @param fast (default = TRUE) Uses analytical formulations for the crossproducts involving sines and cosines.
+#'        Note: this is not really faster because the bottleneck is actually the golden section search,
+#'        but more elegant.
+#' @return a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Amp", and "Phases".
 #' @author Michel Crucifix
 #' @references
 #' \insertRef{sidlichovsky97aa}{gtseries}
 #' @examples
 #'
-#' set.seed(12413)
-#' t = seq(1024)
-#' x_orig = cos(t*0.13423167+0.00) + 1.3 * cos(t*0.119432+2.314) + 0.134994 + 0.4*cos(t*0.653167) + 0.11 * cos(t*0.78913498) + rnorm(1024)*0.12
-#' OUT <- mfft_real(x_orig)
-#' print(OUT)
+#' data(harmonic_sample)
+#' data_to_analyse <- develop(harmonic_sample)
+#' spec <- mfft_real(data_to_analyse)
+#' print(spec)
 #'
 #' @export mfft_real
-mfft_real <- function(xdata, nfreq=5, correction=TRUE){
-  xdata = stats::as.ts(xdata)
-  dt = deltat(xdata)
-  startx = stats::start(xdata)[1]
-  N = length(xdata)
-  times <- (seq(N)-1)*dt+startx
-  residu = xdata
+mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
+  if (correction == 3) "this correction scheme is currently not implemented for real time series"
+  N <- length(x_data)
+  N2 <- N / 2.
+  x_data <- stats::as.ts(x_data)
+  dt <- deltat(x_data)
 
-  # will withold the definitive frequencies
-  Fs <- rep(-1, nfreq)
-    k=1
-    OUT <- calc_amp(xdata, nfreq, Fs)
+  my_min_freq <- ifelse(is.null(min_freq), 0, min_freq * dt)
+  my_max_freq <- ifelse(is.null(max_freq), pi, max_freq * dt)
 
-    Fs <- OUT$Freq[-1]
+  start_x <- stats::start(x_data)[1]
+  N <- length(x_data)
+  OUT <- mfft_real_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
 
+  if (correction == 2) {
+    x_data_synthetic <- rep(0, N)
+    t <- seq(N) - 1
+    for (i in seq(n_freq)) x_data_synthetic <- x_data_synthetic + OUT$amp[i] * cos(OUT$nu[i] * t + OUT$phase[i])
+    OUT2 <- mfft_real_analyse(x_data_synthetic, n_freq, fast, NULL, my_min_freq, my_max_freq)
+    OUT$nu <- OUT$nu + (OUT$nu - OUT2$nu)
+    OUT$amp <- OUT$amp + (OUT$amp - OUT2$amp)
+    OUT$phase <- OUT$phase + (OUT$phase - OUT2$phase)
+  } else if (correction == 1) {
+    for (j in seq(n_freq)) {
+      epsilon <- OUT$amp[j] * Q_prime(-2 * OUT$nu[j] * N2) * cos(2 * OUT$nu[j] * N2 + 2 * OUT$phase[j])
+      if ((j + 1) <= n_freq) {
+        for (s in seq(j + 1, n_freq)) {
+          epsilon <- epsilon + OUT$amp[s] *
+            (
+              Q_prime((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s]) -
+                Q_prime((OUT$nu[s] + OUT$nu[j]) * N2) * cos((OUT$nu[j] + OUT$nu[s]) * N2 + OUT$phase[j] + OUT$phase[s])
+            )
+        }
+      }
+      epsilon <- epsilon / Q_second_0 / N2 / OUT$amp[j]
 
-##   correction  METHOD ANALYTICAL. CURRENTLY NOT USED BUT SHOULD STILL BE EXPLORED
-##  -------------------------------------------------------------------------------- 
-##    Freqs <- OUT$Freq
-##    amps <- OUT$Amp
-##    Phases <- OUT$Phase
-##     if (k < (nfreq)){
-##       tau = (N-1) / 2.
-##       Qp <- function(y) {
-##         (1 / y) * (pi^2/ (pi^2-y^2))*(cos(y) + sin(y) / y * (3. * y^2 - pi^2)/(pi^2 - y^2))}
-##       Q0 <- {2. / (pi^2) -1./3.}
-##       
-##       epsilon = rep(0,nfreq)
-##       
-## #       tau = (N-1) / 2.
-##      
-##       for (j in seq(k,nfreq-1)){
-##          jj = j+1
-##          ysj =(Freqs[(jj+1):(nfreq+1)]-Freqs[jj])*tau
-##          epsilon[j] = sum(amps[(jj + 1):(nfreq+1)]*Qp(ysj)/
-##                           (amps[jj] * Q0 * tau) * cos(ysj + Phases[(jj+1):(nfreq+1)]-Phases[jj]))
-##       }
-##       Epsilon=c(0,epsilon)
-##       Freqs <- Freqs - Epsilon
-##       Fs <- Freqs[2:(nfreq+1)]
-##     }
-## 
-
-   
-    # correction  (methode 2)
-
-#   }
-  if (correction){
-   xdata_synthetic <- rep(0,N)
-     Fs <- rep(-1, nfreq)
-    for (i in seq(nfreq+1)) xdata_synthetic = xdata_synthetic + OUT$Amp[i]*cos(OUT$Freq[i]*seq(N) + OUT$Phase[i])
-    OUT2 <- calc_amp(xdata_synthetic, nfreq, Fs)
-  
-#     print(OUT2)
-#     print(OUT$Freq - OUT2$Freq)
-    # adjust to units
-    OUT$Freq = OUT$Freq + (OUT$Freq - OUT2$Freq)
-    OUT$Amp = OUT$Amp + (OUT$Amp - OUT2$Amp)
-    OUT$Phase = OUT$Phase + (OUT$Phase - OUT2$Phase)
+      OUT$nu[j] <- OUT$nu[j] - epsilon
+    }
+    OUT <- mfft_real_analyse(x_data, n_freq, fast, nu = OUT$nu, my_min_freq, my_max_freq)
   }
-    OUT$Freq <- OUT$Freq/dt
-    OUT$Phase <- OUT$Phase - startx*OUT$Freq
 
-    O <- order(OUT$Amp, decreasing=TRUE)
+  OUT$nu <- OUT$nu / dt
+  OUT$phase <- OUT$phase - start_x * OUT$nu
 
-    OUT$Amp = OUT$Amp[O]
-    OUT$Freq = OUT$Freq[O]
-    OUT$Phase = OUT$Phase[O]
-
-  
-
-    attr(OUT,"class") = "mfft_deco"
-    attr(OUT,"nfreq") = nfreq
-    attr(OUT,"xdata") = xdata
-
-    total_ssq <- sum(xdata^2)
-
-    return(OUT)
-}
-
-#' MFFT reconstruction
-#' @rdname mfft_deco
-#' @export reconstruct_mfft
-reconstruct_mfft  <- function(M){
- if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
- xdata <- attr(M,"xdata")
- nfreq <- attr(M,"nfreq")
- times <- seq(length(xdata))*dt(xdata) + startx(xdata)
- reconstructed <- lapply(seq(nfreq), function(i) M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]) )
-}
-
-#' MFFT ANOVA
-#' @rdname mfft_deco
-#' @export mfft_anova
-mfft_anova  <- function(M){
- if (!(attr(M,"class")=="mfft_deco")) stop ("object is not a MFFT decomposition")
- xdata <- attr(M,"xdata")
- nfreq <- attr(M,"nfreq")
- N <- length(xdata)
- times <- seq(length(xdata))*deltat(xdata) + start(xdata)
- reconstructed <- sapply(seq(nfreq), function(i) M$Amp[i]*cos(M$Freq[i]*times + M$Phase[i]) )
- cum_reconstruct <- apply(reconstructed, 1, cumsum)
- residual_vars <- apply(apply(cum_reconstruct, 1, function(i) xdata-i) , 2, function(j) sum(j^2))
- var0 <- sum(xdata^2)
- master_vars <- c(var0, residual_vars[-length(residual_vars)])
- p2s <- 2*seq(nfreq)
- p1s <- c(0, p2s[-length(p2s)])
- F <- (master_vars - residual_vars)/residual_vars * (N - p2s)/(p2s-p1s)
-}
-
-
-#' @rdname mfft_deco
-#' @export
-as.data.frame.mfft_deco <- function(x) {data.frame(Freq=x$Freq, Amp=x$Amp, Phases=x$Phases)}
-
-
-#' @rdname mfft_deco
-#' @export
-plot.mfft_deco <- function (M,periods=FALSE,...){
-#   O <- order(M$Freq)
-  plot(abs(M$Freq), abs(M$Amp),'h',ylab="Amplitudes", xlab="",  ...)
-  if (periods) {
-    frequencies <- pretty(range(M$Freq/(2*pi)))
-    labels <- as.character(1/frequencies)
-    if (0 %in% frequencies) labels[which(frequencies == 0)] = "∞"
-    axis(1, line=3, at=2*pi*frequencies, labels=labels)
-    mtext("Rate", 1, 2)
-    mtext("Period", 1, 4)
-  } else {
-    mtext("Rate", 1, 3)
+  to_be_corrected <- which(OUT$amp < 0)
+  if (length(to_be_corrected)) {
+    OUT$amp[to_be_corrected] <- -OUT$amp[to_be_corrected]
+    OUT$phase[to_be_corrected] <- OUT$phase[to_be_corrected] + pi
   }
-  points(abs(M$Freq), abs(M$Amp),'p',...)
+
+  to_be_corrected <- which(OUT$nu < 0)
+  if (length(to_be_corrected)) {
+    OUT$nu[to_be_corrected] <- -OUT$nu[to_be_corrected]
+    OUT$phase[to_be_corrected] <- -OUT$phase[to_be_corrected]
+  }
+
+  o <- order(OUT$amp, decreasing = TRUE)
+  OUT$amp <- OUT$amp[o]
+  OUT$nu <- OUT$nu[o]
+  OUT$phase <- OUT$phase[o]
+
+  OUT$phase <- (OUT$phase + (2 * pi)) %% (2 * pi)
+
+  names(OUT) <- c("Freq", "Amp", "Phases")
+  class(OUT) <- c("discreteSpectrum", "data.frame")
+  attr(OUT, "data") <- x_data
+  attr(OUT, "n_freq") <- n_freq
+  return(OUT)
 }
-
-#' @rdname mfft_deco
-#' @export
-lines.mfft_deco <- function (M,...){
-#   O <- order(M$Freq)
-  lines(abs(M$Freq), abs(M$Amp),'h',...)
-  points(abs(M$Freq), abs(M$Amp),'p',...)
-}
-
-
-#' @rdname mfft_deco
-#' @export
-print.mfft_deco <- function (M,...){
-  print.data.frame(cbind(as.data.frame(M), Period=2*pi/M$Freq))
-}
-
-
-
