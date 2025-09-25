@@ -63,7 +63,7 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
                          min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
         if (!is.null(nu)) {
                 nu_temp <- unlist(lapply(nu, function(a) if (a == 0) a else c(a, -a)))
-                phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf )))
+                phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf)))
                 nu <- nu_temp
                 if (length(nu) < 2 * n_freq) {
                         nu[2 * n_freq] <- NA
@@ -90,7 +90,6 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
         Q_matrix <- matrix(0, 2 * n_freq, 2 * n_freq)
         f <- list()
         x <- list()
-        B <- list()
         freqs <- 2. * pi * seq(0, (N - 1)) / N
         x[[1]] <- x_data
 
@@ -183,7 +182,7 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
       # }
       #
 
-      norm <- Q_matrix[m,m]
+      norm <- Q_matrix[m, m]
       if (m > 1)  for (i in seq(m-1))  norm <- norm - (f_m_bi[i])^2
 
       # print(sprintf("NORM = %9.4g ", norm - norm2))
