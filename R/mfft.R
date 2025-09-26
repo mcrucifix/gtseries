@@ -408,7 +408,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 #' @rdname mfft
 #' @export mfft_complex
 mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
-  if (correction == 3) "this correction scheme is currently not implemented for real time series"
+  if (correction == 3) "this correction scheme is currently not implemented "
   N <- length(x_data)
   N2 <- N / 2.
   x_data <- stats::as.ts(x_data)
@@ -420,7 +420,7 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
   start_x <- stats::start(x_data)[1]
   N <- length(x_data)
   OUT <- mfft_complex_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
- print(OUT)
+ # print(OUT)
   if (correction == 2) {
     x_data_synthetic <- rep(0, N)
     t <- seq(N) - 1
@@ -434,7 +434,7 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
       epsilon <- 0
       if ((j + 1) <= n_freq) {
         for (s in seq(j + 1, n_freq)) {
-          print((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s])
+          # print((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s])
           epsilon <- epsilon + OUT$amp[s] *
             (
               Q_prime((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s])
@@ -442,7 +442,7 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
         }
       }
       epsilon <- epsilon / Q_second_0 / N2 / OUT$amp[j]
-      print(sprintf("correction = %.f5", epsilon))
+      # print(sprintf("correction = %.5f", epsilon))
 
       OUT$nu[j] <- OUT$nu[j] - epsilon
     }
@@ -617,78 +617,7 @@ mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, corr
   return(OUT)
 }
 
-#' @rdname mfft
-#' @export
-mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
-  if (correction == 3) "this correction scheme is currently not implemented for real time series"
-  N <- length(x_data)
-  N2 <- N / 2.
-  x_data <- stats::as.ts(x_data)
-  dt <- deltat(x_data)
 
-  my_min_freq <- ifelse(is.null(min_freq), -pi, min_freq * dt)
-  my_max_freq <- ifelse(is.null(max_freq), pi, max_freq * dt)
-
-  start_x <- stats::start(x_data)[1]
-  N <- length(x_data)
-  OUT <- mfft_complex_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
-
-  if (correction == 2) {
-    x_data_synthetic <- rep(0, N)
-    t <- seq(N) - 1
-    for (i in seq(n_freq)) x_data_synthetic <- x_data_synthetic + OUT$amp[i] * cis(OUT$nu[i] * t + OUT$phase[i])
-    OUT2 <- mfft_complex_analyse(x_data_synthetic, n_freq, fast, NULL, my_min_freq, my_max_freq)
-    OUT$nu <- OUT$nu + (OUT$nu - OUT2$nu)
-    OUT$amp <- OUT$amp + (OUT$amp - OUT2$amp)
-    OUT$phase <- OUT$phase + (OUT$phase - OUT2$phase)
-  } else if (correction == 1) {
-    for (j in seq(n_freq)) {
-      epsilon <- 0
-      if ((j + 1) <= n_freq) {
-        for (s in seq(j + 1, n_freq)) {
-          print((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s])
-          epsilon <- epsilon + OUT$amp[s] *
-            (
-              Q_prime((OUT$nu[s] - OUT$nu[j]) * N2) * cos((OUT$nu[j] - OUT$nu[s]) * N2 + OUT$phase[j] - OUT$phase[s])
-            )
-        }
-      }
-      epsilon <- epsilon / Q_second_0 / N2 / OUT$amp[j]
-      print(sprintf("correction = %.f5", epsilon))
-
-      OUT$nu[j] <- OUT$nu[j] - epsilon
-    }
-    OUT <- mfft_complex_analyse(x_data, n_freq, fast, nu = OUT$nu, my_min_freq, my_max_freq)
-  }
-
-  OUT$nu <- OUT$nu / dt
-  OUT$phase <- OUT$phase - start_x * OUT$nu
-
-  to_be_corrected <- which(OUT$amp < 0)
-  if (length(to_be_corrected)) {
-    OUT$amp[to_be_corrected] <- -OUT$amp[to_be_corrected]
-    OUT$phase[to_be_corrected] <- OUT$phase[to_be_corrected] + pi
-  }
-
-#  to_be_corrected <- which(OUT$nu < 0)
-#  if (length(to_be_corrected)) {
-#    OUT$nu[to_be_corrected] <- -OUT$nu[to_be_corrected]
-#    OUT$phase[to_be_corrected] <- -OUT$phase[to_be_corrected]
-#  }
-
-  o <- order(OUT$amp, decreasing = TRUE)
-  OUT$amp <- OUT$amp[o]
-  OUT$nu <- OUT$nu[o]
-  OUT$phase <- OUT$phase[o]
-
-  OUT$phase <- (OUT$phase + (2 * pi)) %% (2 * pi)
-
-  names(OUT) <- c("Freq", "Amp", "Phases")
-  class(OUT) <- c("discreteSpectrum", "data.frame")
-  attr(OUT, "data") <- x_data
-  attr(OUT, "n_freq") <- n_freq
-  return(OUT)
-}
 
 #' @rdname mfft
 #' @export mfft
