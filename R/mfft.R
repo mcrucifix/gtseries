@@ -1,21 +1,21 @@
-# Helpers -----------------------------------------------------------------
+# Helpers ----------------------------------------------------------------
 
 pisquare <- pi^2
 pihalf <- pi / 2
 
+Q <- function(w_T) {
+        sin(w_T) / (w_T) * (pisquare) / (pisquare - (w_T * w_T))
+}
+Q_prime <- function(y) {
+        ifelse(y == 0, 0, pisquare / (pisquare - y * y) / y *
+               (cos(y) + (sin(y) / y) * (3 * y * y - pisquare) / (pisquare - y * y)))
+}
+Q_second_0 <- 2 / pisquare - 1. / 3.
+
+
+
 cis <- function(x) exp(1i * x)
 
-Q <- function(x) {
-  ifelse(abs(x) < 1e-14, 1,
-         (sin(x) / x) * (1 - 1i * (cos(x) / sin(x))))
-}
-
-Q_prime <- function(x) {
-  ifelse(abs(x) < 1e-14, 0,
-         (cos(x) / x - sin(x) / (x^2)) * (1 - 1i * (cos(x) / sin(x))))
-}
-
-Q_second_0 <- -pisquare / 3
 #' Internal workhorse of the modified Fourier transform for complex and real series
 #'
 #' Implementation of the Frequency Modified Fourier Transform
@@ -285,7 +285,9 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
     }
     f[[m]] <- cis(nu[m] * t)
 
-    if (fast) {
+    Q_matrix2 <- Q_matrix
+
+    # if (fast) {
       for (i in seq(m)) {
         num <- (nu[m] - nu[i]) * N2
         Qm <- ifelse(num == 0, 1, Q(num))
@@ -293,11 +295,11 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
         Q_matrix[m, i] <- cis(num) * Qm
         Q_matrix[i, m] <- Conj(Q_matrix[m,i])
       }
-    } else {
+    # } else {
       for (i in seq(m)) {
         Q_matrix[m, i] <- h_prod(f[[m]], f[[i]])
         Q_matrix[i, m] <- Conj(Q_matrix[m,i])
-    }
+    # }
   }
 
   A[m, ] <- 0
@@ -333,6 +335,10 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   return(OUT)
   return(OUT)
 }
+
+
+
+
 
 
 #' Frequency Modified Fourier transform for real and  complex series
@@ -376,6 +382,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 #' spec <- mfft_real(data_to_analyse)
 #' print(spec)
 #'
+#' @rdname mfft
 #' @export mfft_complex
 mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
   if (correction == 3) "this correction scheme is currently not implemented for real time series"
@@ -448,12 +455,6 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
   return(OUT)
 }
 
-mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
-                                 min_freq = NULL, max_freq = NULL, use_C_code = FALSE) {
-  # ... (your original implementation of mfft_complex_analyse goes here unchanged)
-}
-
-
 # Unified documentation ----------------------------------------------------
 
 #' Modified Fourier Transform with frequency correction
@@ -519,7 +520,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 #' method. \emph{Celestial Mechanics and Dynamical Astronomy}, 65(2–3), 137–148.
 #'
 #' @author Michel Crucifix
-#' @aliases mfft_real mfft_complex
+#' @aliases mfft_real mfft_complex mfft
 #' @rdname mfft
 #' @export
 mfft_real <- function(x_data, n_freq = 5, min_freq = NULL, max_freq = NULL, correction = 1, fast = TRUE) {
@@ -665,7 +666,7 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
   return(OUT)
 }
 
-
+#' @rdname mfft
 #' @export mfft
 mfft <- function(xdata, nfreq = 15, min_freq = NULL, max_freq = NULL, correction = 1, force_complex = FALSE) {
   if (is.complex(xdata) || force_complex) {
