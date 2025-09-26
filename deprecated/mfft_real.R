@@ -60,7 +60,7 @@ Q_second_0 <- 2 / pisquare - 1. / 3.
 #' @author Michel Crucifix
 #' @keywords internal
 mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
-                         min_freq = NULL, max_freq = NULL, use_C_code = TRUE) {
+                         min_freq = NULL, max_freq = NULL, use_C_code = FALSE) {
         if (!is.null(nu)) {
                 nu_temp <- unlist(lapply(nu, function(a) if (a == 0) a else c(a, -a)))
                 phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf)))

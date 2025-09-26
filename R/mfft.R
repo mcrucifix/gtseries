@@ -38,10 +38,6 @@ cis <- function(x) exp(1i * x)
 #' @param min_freq,max_freq Optional numeric scalars. Real, positive bounds
 #'   for the angular frequencies considered in the search. Units depend on
 #'   the sampling of \code{x_data}.
-#' @param use_C_code Logical (default \code{FALSE}). If \code{TRUE}, uses the
-#'   compiled C implementation of the golden section search (mainly for testing
-#'   or speed); otherwise uses the \pkg{cmna} package's implementation.
-#'
 #' @return A \code{data.frame} with columns:
 #'   \itemize{
 #'     \item \code{nu}: estimated angular frequencies
@@ -58,9 +54,6 @@ cis <- function(x) exp(1i * x)
 #' \insertRef{sidlichovsky97aa}{gtseries}
 #'
 #' @author Michel Crucifix
-#' @param use_C_code Logical. If \code{TRUE}, the compiled C golden-section
-#'   search is used (if available); otherwise the \pkg{cmna} implementation is
-#'   used. Mainly relevant for testing or benchmarking.
 #' @aliases mfft_real_analyse mfft_complex_analyse
 #' @rdname mfft_internal
 #' @keywords internal
@@ -68,7 +61,7 @@ cis <- function(x) exp(1i * x)
 # Workhorse for real series ------------------------------------------------
 
 mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
-                         min_freq = NULL, max_freq = NULL, use_C_code = FALSE) {
+                         min_freq = NULL, max_freq = NULL) {
         if (!is.null(nu)) {
                 nu_temp <- unlist(lapply(nu, function(a) if (a == 0) a else c(a, -a)))
                 phase <- unlist(lapply(nu, function(a) if (a == 0) 0 else c(0, pihalf)))
@@ -122,8 +115,7 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
             tol = 1.e-10, m = 9999
           )
 
-
-        if (f_max > freqs[2] / 2) {
+         if (f_max > freqs[2] / 2) {
           phase[m] <- 0.
           nu[m] <- f_max
           phase[m + 1] <- pihalf
@@ -162,8 +154,8 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
       A[m, m] <- 1.
       if (m > 1) {
         f_m_bi <- rep(0, (m - 1))
-        for (j in seq(m - 1)) for (i in seq(j)) f_m_bi[j] <- f_m_bi[j] + A[j, i] * Q_matrix[m, i]
-        for (j in seq(m - 1)) for (i in seq(j, (m - 1))) A[m, j] <- A[m, j] - f_m_bi[i] * A[i, j]
+        for (j in seq(m - 1)) for (i in seq(j)) f_m_bi[j] <- f_m_bi[j] - A[j, i] * Q_matrix[m, i]
+        # for (j in seq(m - 1)) for (i in seq(j, (m - 1))) A[m, j] <- A[m, j] - f_m_bi[i] * A[i, j]
       }
 
       # norm <- 0
@@ -186,7 +178,12 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 
       # print(sprintf("NORM = %9.4g ", norm - norm2))
 
-      A[m, ] <- A[m, ] / sqrt(norm)
+      A[m,m] <- A[m,m] / sqrt(norm)
+
+      if (m > 1) {
+        for (j in seq(m - 1)) for (i in seq(j, (m - 1))) A[m, j] <- A[m, j] + A[m,m] *  f_m_bi[i] * A[i, j]
+      }
+
 
       Prod[m] <- h_prod(x[[1]], f[[m]])
 
@@ -255,6 +252,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   A <- matrix(0, n_freq, n_freq)
   Q_matrix <- matrix(0, n_freq, n_freq)
   f <- list()
+  B <- list()
   x <- list()
   freqs <- 2. * pi * seq(0, (N - 1)) / N
   x[[1]] <- x_data
@@ -287,7 +285,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
 
     Q_matrix2 <- Q_matrix
 
-    # if (fast) {
+    if (!fast) {
       for (i in seq(m)) {
         num <- (nu[m] - nu[i]) * N2
         Qm <- ifelse(num == 0, 1, Q(num))
@@ -295,33 +293,60 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
         Q_matrix[m, i] <- cis(num) * Qm
         Q_matrix[i, m] <- Conj(Q_matrix[m,i])
       }
-    # } else {
+    } else {
       for (i in seq(m)) {
         Q_matrix[m, i] <- h_prod(f[[m]], f[[i]])
         Q_matrix[i, m] <- Conj(Q_matrix[m,i])
-    # }
+    }
   }
 
   A[m, ] <- 0
-  A[m, m] <- 1.
   if (m > 1) {
     f_m_bi <- rep(0, (m - 1))
     # eq. 17
-    for (j in seq(m - 1)) for (s in seq(j)) f_m_bi[j] <- f_m_bi[j] - A[j, s] * Mod(Q_matrix[m,s])       # eq. 19
-    for (j in seq(m - 1)) for (s in seq(j, (m - 1))) A[m, j] <- A[m, j] + f_m_bi[s] * A[s, j]  
+    for (j in seq(m - 1)) for (s in seq(j)) f_m_bi[j] <- f_m_bi[j] - A[j, s] * (Q_matrix[m,s])       # eq. 19
   }
 
   norm <- 1
+  # norm2 <- 1
 
-  if (m > 1) for (j in seq(1, (m - 1)))  norm <- norm - Mod(f_m_bi[j])^2
-  A[m, ] <- A[m, ] / sqrt(norm)
+  if (m>1) {
+    norm <- norm + sum((f_m_bi)*Conj(f_m_bi))
+    #for (j in seq(m-1)) norm <- norm -  2 * Re ( sum(A[j,(1:j)] * Q_matrix[j,m])  )
+    for (j in seq(m-1)) norm <- norm -  2 * Re ( f_m_bi[j] *  sum(A[j,(1:j)] * Q_matrix[(1:j),m])  )
+  }
+  # if (m > 1) for (j in seq(1, (m - 1)))  norm2 <- norm2 - Mod(f_m_bi[j])^2
+  # print (sprintf("norm1 = %.4f, norm2 = %.4f", norm, norm2))
+  A[m,m ] <- 1. / sqrt(norm)
 
+  if (m>1) for (j in seq(m - 1)) for (s in seq(j, (m - 1))) {
+    A[m, j] <- A[m, j] + A[m,m] * ( f_m_bi[s] ) * (A[s, j]  )
+  }
+
+  # for test only 
+  B[[m]] = 0. 
+  # print (sprintf("A[%i,%i] = %.4f", m,m,A[m,m]))
+  for (k in seq(m)) B[[m]] = B[[m]] + A[m,k] * f[[k]]   * cis(nu[k] * N2)
+  # for (k in seq(m)) {
+  #     print(sprintf("crossprod0 B[[%i]] * B[[%i]] = %.8f", k, m, Mod(h_prod(B[[k]],B[[m]]))))
+  #     print(sprintf("crossprod2 B[[%i]] * B[[%i]] = %.8f", k, m, {
+  #                                    crossprod <- 0;
+  #                                    for (j in (seq(k))) for (jp in (seq(m))) crossprod <- crossprod + A[k,j] * Conj(A[m,jp]) * Q_matrix[j,jp] * cis((nu[j]-nu[jp])*N2);
+  #                                    Mod(crossprod) }))
+  # }
+  #
   FF[m] <- h_prod(x[[m]], f[[m]])
   S[m] <- A[m,m] * FF[m] * cis(nu[m] * N2)
-  #for (j in seq(m)) S[m] <- S[m] + FF[j] * A[m, j]
+  
+
+  #Stest = 0
+  #for (j in seq(m)) Stest <- Stest + FF[j] * A[m, j] * cis(nu[j] * N2)
+  # print (sprintf("S[m] = %.4f  + 1i %.4f and  Stest = %.4f + 1i * %.4f", Re(S[m]), Im(S[m]), Re(Stest), Im(Stest)))
 
   x[[m + 1]] <- x[[m]]
-  for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * A[m, j] * f[[j]] * cis(-nu[j] * N2)
+  for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * A[m, j] * f[[j]] * cis(-(nu[j]) * N2)
+  # these two lines are equivalent
+  #for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - A[m,m] * FF[m] * A[m,j] * f[[j]] * cis((nu[m] - nu[j]) * N2)
   }
 
   m_max <- n_freq
@@ -335,8 +360,6 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   return(OUT)
   return(OUT)
 }
-
-
 
 
 
@@ -391,13 +414,13 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
   x_data <- stats::as.ts(x_data)
   dt <- deltat(x_data)
 
-  my_min_freq <- ifelse(is.null(min_freq), -pi, min_freq * dt)
-  my_max_freq <- ifelse(is.null(max_freq), pi, max_freq * dt)
+  my_min_freq <- ifelse(is.null(min_freq), 0, min_freq * dt)
+  my_max_freq <- ifelse(is.null(max_freq), 2*pi, max_freq * dt)
 
   start_x <- stats::start(x_data)[1]
   N <- length(x_data)
   OUT <- mfft_complex_analyse(x_data, n_freq, fast, NULL, my_min_freq, my_max_freq)
-
+ print(OUT)
   if (correction == 2) {
     x_data_synthetic <- rep(0, N)
     t <- seq(N) - 1
@@ -426,6 +449,9 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
     OUT <- mfft_complex_analyse(x_data, n_freq, fast, nu = OUT$nu, my_min_freq, my_max_freq)
   }
 
+  # fold frequencies
+  OUT$nu[which (OUT$nu > pi)] <- OUT$nu[which (OUT$nu > pi)] - (2*pi)
+  
   OUT$nu <- OUT$nu / dt
   OUT$phase <- OUT$phase - start_x * OUT$nu
 
@@ -501,8 +527,6 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
 #' @param fast Logical. If \code{TRUE}, uses analytical formulations for the
 #'   cross-products of Fourier components; if \code{FALSE}, they are computed
 #'   numerically.
-#' @param nu Optional numeric vector of frequencies. If supplied, these are used
-#'   directly instead of being estimated from the Fourier spectrum.
 #'
 #' @return A \code{discreteSpectrum} object, based on a \code{data.frame} with
 #'   columns:
@@ -668,11 +692,12 @@ mfft_complex <- function(x_data, n_freq = 10, min_freq = NULL, max_freq = NULL, 
 
 #' @rdname mfft
 #' @export mfft
-mfft <- function(xdata, nfreq = 15, min_freq = NULL, max_freq = NULL, correction = 1, force_complex = FALSE) {
-  if (is.complex(xdata) || force_complex) {
-    return(mfft_complex(xdata, nfreq, min_freq, max_freq, correction))
+#' @param force_complex in the `mfft` function, assume x_data is complex, even if it contains real numbers only
+mfft <- function(x_data, n_freq = 15, min_freq = NULL, max_freq = NULL, correction = 1, force_complex = FALSE) {
+  if (is.complex(x_data) || force_complex) {
+    return(mfft_complex(x_data, n_freq, min_freq, max_freq, correction))
   } else {
-    return(mfft_real(xdata, nfreq, min_freq, max_freq, correction))
+    return(mfft_real(x_data, n_freq, min_freq, max_freq, correction))
   }
 }
 

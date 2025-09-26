@@ -34,8 +34,8 @@ mfft_complex(
 )
 
 mfft(
-  xdata,
-  nfreq = 15,
+  x_data,
+  n_freq = 15,
   min_freq = NULL,
   max_freq = NULL,
   correction = 1,
@@ -65,8 +65,7 @@ frequencies considered in the search. Units depend on the sampling of
 cross-products of Fourier components; if \code{FALSE}, they are computed
 numerically.}
 
-\item{nu}{Optional numeric vector of frequencies. If supplied, these are used
-directly instead of being estimated from the Fourier spectrum.}
+\item{force_complex}{in the `mfft` function, assume x_data is complex, even if it contains real numbers only}
 }
 \value{
 a `discreteSpectrum` object, based on a data.frame with columns "Freq", "Amp", and "Phases".
