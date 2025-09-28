@@ -304,36 +304,39 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   if (m > 1) {
     f_m_bi <- rep(0, (m - 1))
     # eq. 17
-    for (j in seq(m - 1)) for (s in seq(j)) f_m_bi[j] <- f_m_bi[j] - A[j, s] * (Q_matrix[m,s])       # eq. 19
+    for (j in seq(m - 1)) for (s in seq(j)) f_m_bi[j] <- f_m_bi[j] - Conj(A[j, s]) * (Q_matrix[m,s])  * cis((nu[m] - nu[s])*N2)      # eq. 19
   }
 
   norm <- 1
-  # norm2 <- 1
+   norm2 <- 1
 
-  if (m>1) {
-    norm <- norm + sum((f_m_bi)*Conj(f_m_bi))
-    #for (j in seq(m-1)) norm <- norm -  2 * Re ( sum(A[j,(1:j)] * Q_matrix[j,m])  )
-    for (j in seq(m-1)) norm <- norm -  2 * Re ( f_m_bi[j] *  sum(A[j,(1:j)] * Q_matrix[(1:j),m])  )
-  }
-  # if (m > 1) for (j in seq(1, (m - 1)))  norm2 <- norm2 - Mod(f_m_bi[j])^2
-  # print (sprintf("norm1 = %.4f, norm2 = %.4f", norm, norm2))
+   if (m>1) {
+     norm2 <- norm2 - sum((f_m_bi)*Conj(f_m_bi))
+     #for (j in seq(m-1)) norm <- norm -  2 * Re ( sum(A[j,(1:j)] * Q_matrix[j,m])  )
+     #TODO : check this is indeed a +
+     #TODO : check the long norm
+     #TODO : make a stop condition when matrix becomes ill conditionned (norm = 0)
+     for (j in seq(m-1)) for (s in seq(s)) norm2 <- norm2 +  2 * Re ( f_m_bi[j] *  A[j,s] * Q_matrix[m,s] * cis((nu[m] - nu[s])*N2) )
+   }
+   if (m > 1) for (j in seq(1, (m - 1)))  norm <- norm - f_m_bi[j] * Conj(f_m_bi[j])
+  print (sprintf("norm1 = %.8f, norm2 = %.8f", norm, norm2))
   A[m,m ] <- 1. / sqrt(norm)
 
   if (m>1) for (j in seq(m - 1)) for (s in seq(j, (m - 1))) {
-    A[m, j] <- A[m, j] + A[m,m] * ( f_m_bi[s] ) * (A[s, j]  )
+    A[m, j] <- A[m, j] + (A[m,m]) * ( f_m_bi[s] ) * (A[s, j]  )
   }
 
   # for test only 
   B[[m]] = 0. 
   # print (sprintf("A[%i,%i] = %.4f", m,m,A[m,m]))
   for (k in seq(m)) B[[m]] = B[[m]] + A[m,k] * f[[k]]   * cis(nu[k] * N2)
-  # for (k in seq(m)) {
-  #     print(sprintf("crossprod0 B[[%i]] * B[[%i]] = %.8f", k, m, Mod(h_prod(B[[k]],B[[m]]))))
-  #     print(sprintf("crossprod2 B[[%i]] * B[[%i]] = %.8f", k, m, {
-  #                                    crossprod <- 0;
-  #                                    for (j in (seq(k))) for (jp in (seq(m))) crossprod <- crossprod + A[k,j] * Conj(A[m,jp]) * Q_matrix[j,jp] * cis((nu[j]-nu[jp])*N2);
-  #                                    Mod(crossprod) }))
-  # }
+  for (k in seq(m)) {
+      print(sprintf("crossprod0 B[[%i]] * B[[%i]] = %.12f", k, m, Mod(h_prod(B[[k]],B[[m]]))))
+      print(sprintf("crossprod2 B[[%i]] * B[[%i]] = %.12f", k, m, {
+                                     crossprod <- 0;
+                                     for (j in (seq(k))) for (jp in (seq(m))) crossprod <- crossprod + A[k,j] * Conj(A[m,jp]) * Q_matrix[j,jp] * cis((nu[j]-nu[jp])*N2);
+                                     Mod(crossprod) }))
+  }
   #
   FF[m] <- h_prod(x[[m]], f[[m]])
   S[m] <- A[m,m] * FF[m] * cis(nu[m] * N2)
@@ -352,7 +355,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   m_max <- n_freq
 
   amp[1:m_max] <- 0
-  for (s in seq(m_max)) for (j in seq(s,m_max)) amp[s] <- amp[s] + A[j,j]*A[j,s]*FF[j]*cis((nu[j]-nu[s]) * N2)
+  for (s in seq(m_max)) for (j in seq(s,m_max)) amp[s] <- amp[s] + A[j,j]*Conj(A[j,s])*FF[j]*cis((nu[j]-nu[s]) * N2)
 
   phase <- Arg(amp)
   amp <- Mod(amp)
