@@ -128,26 +128,63 @@ as.data.frame.discreteSpectrum <- function(x, row.names, optional, ...) {
 #
 #' @export
 plot.discreteSpectrum <- function(x, ...) {
-  args <- list('...')
-  labels <- args$labels
+  args <- list(...)
   periods <- args$periods
-  if (is.null(periods)) periods <- FALSE
-  plot(abs(x$Freq), abs(x$Amp), 'h', ylab = "Amplitudes", xlab = "", ...)
+  args$periods <- NULL  # Remove 'periods' to avoid sending to plot()
+
+  # ---- Validate 'periods' ----
+  if (is.null(periods)) {
+    periods <- FALSE
+  } else if (!is.logical(periods) || length(periods) != 1) {
+    warning("Argument 'periods' must be TRUE or FALSE. Using FALSE.")
+    periods <- FALSE
+  }
+
+  # ---- Call plot with cleaned args ----
+  do.call(
+    plot,
+    c(
+      list(abs(x$Freq), abs(x$Amp), type = 'h', ylab = "Amplitudes", xlab = ""),
+      args
+    )
+  )
+
+  # ---- Custom axis ----
   if (periods) {
-    frequencies <- pretty(range(x$Freq / (2 * pi)))
-    plabels <- as.character(1 / frequencies)
-    if (0 %in% frequencies) plabels[which(frequencies == 0)] <- "\u221E"
-    axis(1, line = 3, at = 2 * pi * frequencies, labels = plabels)
+    # Detect zero frequency (infinite period case)
+    has_zero <- any(abs(x$Freq) < .Machine$double.eps)
+
+    # Compute *finite* periods only
+    finite_periods <- 1 / (x$Freq[x$Freq != 0] / (2 * pi))
+    periods_pretty <- pretty(range(finite_periods), n = 5)
+
+    # Insert Inf at the beginning if zero frequency exists
+    if (has_zero) {
+      periods_labels <- c(Inf, periods_pretty)
+      freq_at <- c(0, 2 * pi / periods_pretty)
+    } else {
+      periods_labels <- periods_pretty
+      freq_at <- 2 * pi / periods_pretty
+    }
+
+    # Convert labels: replace Inf with "∞"
+    label_text <- ifelse(is.infinite(periods_labels), "\u221E", as.character(periods_labels))
+
+    axis(1, line = 3, at = freq_at, labels = label_text)
     mtext("Rate", 1, 2)
     mtext("Period", 1, 4)
+
   } else {
     mtext("Rate", 1, 3)
   }
-  if (!is.null(labels)) {
-    y_shift <- 0.05 * diff(range(x$Amp))
-    text(x$Freq, x$Amp, labels, srt = 90, adj = -0.4)
+
+  # ---- Optional text labels ----
+  if (!is.null(args$labels)) {
+    # y_shift <- 0.05 * diff(range(x$Amp))
+    text(x$Freq, x$Amp, args$labels, srt = 90, adj = -0.4)
   }
 }
+
 
 #' Add lines to discrete spectrum plot
 #'
