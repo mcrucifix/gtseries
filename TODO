@@ -13,4 +13,5 @@
 
 - for tone attribution: RAlgoCpp poses some problems. At least relegate to an option branch, authorise installation without it and if not installed just consider the function as unavailable. 
 
-- mfft wast tested and gives very good results but I do not understand why. the basis of the Bi is not normalised and the norms do not correspond. There are some tricky mathematical compensation errors which I do not understand. 
+- mfft is well and tested. Needs some optimisation (vectorisation, not too agressive to preserve portability). 
+
