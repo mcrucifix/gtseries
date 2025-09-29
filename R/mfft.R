@@ -185,10 +185,8 @@ mfft_real_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
       }
 
 
-      Prod[m] <- h_prod(x[[1]], f[[m]])
-
-      S[m] <- 0.
-      for (j in seq(m)) S[m] <- S[m] + Prod[j] * A[m, j]
+      Prod[m] <- h_prod(x[[m]], f[[m]])
+      S[m] <- Prod[m] * A[m, m]
 
       x[[m + 1]] <- x[[m]]
       for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * A[m, j] * f[[j]]
@@ -252,7 +250,7 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   A <- matrix(0, n_freq, n_freq)
   Q_matrix <- matrix(0, n_freq, n_freq)
   f <- list()
-  B <- list()
+  # B <- list()
   x <- list()
   freqs <- 2. * pi * seq(0, (N - 1)) / N
   x[[1]] <- x_data
@@ -308,54 +306,46 @@ mfft_complex_analyse <- function(x_data, n_freq, fast = TRUE, nu = NULL,
   }
 
   norm <- 1
-   norm2 <- 1
+   # norm2 <- 1
 
-   if (m>1) {
-     norm2 <- norm2 - sum((f_m_bi)*Conj(f_m_bi))
-     #for (j in seq(m-1)) norm <- norm -  2 * Re ( sum(A[j,(1:j)] * Q_matrix[j,m])  )
-     #TODO : check this is indeed a +
-     #TODO : check the long norm
-     #TODO : make a stop condition when matrix becomes ill conditionned (norm = 0)
-     for (j in seq(m-1)) for (s in seq(s)) norm2 <- norm2 +  2 * Re ( f_m_bi[j] *  A[j,s] * Q_matrix[m,s] * cis((nu[m] - nu[s])*N2) )
-   }
    if (m > 1) for (j in seq(1, (m - 1)))  norm <- norm - f_m_bi[j] * Conj(f_m_bi[j])
-  print (sprintf("norm1 = %.8f, norm2 = %.8f", norm, norm2))
-  A[m,m ] <- 1. / sqrt(norm)
+  # print (sprintf("norm1 = %.8f, norm2 = %.8f", norm, norm2))
+  A[m, m] <- 1. / sqrt(norm)
 
-  if (m>1) for (j in seq(m - 1)) for (s in seq(j, (m - 1))) {
-    A[m, j] <- A[m, j] + (A[m,m]) * ( f_m_bi[s] ) * (A[s, j]  )
+  if (m > 1) for (j in seq(m - 1)) for (s in seq(j, (m - 1))) {
+    A[m, j] <- A[m, j] + A[m, m] * f_m_bi[s] * A[s, j]
   }
 
   # for test only 
-  B[[m]] = 0. 
+  # B[[m]] = 0. 
   # print (sprintf("A[%i,%i] = %.4f", m,m,A[m,m]))
-  for (k in seq(m)) B[[m]] = B[[m]] + A[m,k] * f[[k]]   * cis(nu[k] * N2)
-  for (k in seq(m)) {
-      print(sprintf("crossprod0 B[[%i]] * B[[%i]] = %.12f", k, m, Mod(h_prod(B[[k]],B[[m]]))))
-      print(sprintf("crossprod2 B[[%i]] * B[[%i]] = %.12f", k, m, {
-                                     crossprod <- 0;
-                                     for (j in (seq(k))) for (jp in (seq(m))) crossprod <- crossprod + A[k,j] * Conj(A[m,jp]) * Q_matrix[j,jp] * cis((nu[j]-nu[jp])*N2);
-                                     Mod(crossprod) }))
-  }
+  # for (k in seq(m)) B[[m]] = B[[m]] + A[m,k] * f[[k]]   * cis(nu[k] * N2)
+  # for (k in seq(m)) {
+  #     print(sprintf("crossprod0 B[[%i]] * B[[%i]] = %.8f", k, m, Mod(h_prod(B[[k]],B[[m]]))))
+  # if (m>1) {
+  #     print(sprintf("crossprod0 B[[%i]] * f[[%i]] = %.8f ; fmbi = %.8f", k, m, Re(h_prod(B[[k]],f[[m]])), Re( -f_m_bi[k] * cis(-nu[m]*N2))))}}
+  # #      print(sprintf("crossprod2 B[[%i]] * B[[%i]] = %.12f", k, m, {
+  #                                    crossprod <- 0;
+  #                                    for (j in (seq(k))) for (jp in (seq(m))) crossprod <- crossprod + A[k,j] * Conj(A[m,jp]) * Q_matrix[j,jp] * cis((nu[j]-nu[jp])*N2);
+  #                                    Mod(crossprod) }))
+  # }
   #
   FF[m] <- h_prod(x[[m]], f[[m]])
-  S[m] <- A[m,m] * FF[m] * cis(nu[m] * N2)
-  
+  S[m] <- FF[m] * A[m, m] * cis(-(nu[m])*N2)
 
-  #Stest = 0
-  #for (j in seq(m)) Stest <- Stest + FF[j] * A[m, j] * cis(nu[j] * N2)
-  # print (sprintf("S[m] = %.4f  + 1i %.4f and  Stest = %.4f + 1i * %.4f", Re(S[m]), Im(S[m]), Re(Stest), Im(Stest)))
 
   x[[m + 1]] <- x[[m]]
-  for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * A[m, j] * f[[j]] * cis(-(nu[j]) * N2)
+  for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - S[m] * (A[m, j]) * f[[j]] * cis((nu[j]) * N2)
   # these two lines are equivalent
-  #for (j in seq(m)) x[[m + 1]] <- x[[m + 1]] - A[m,m] * FF[m] * A[m,j] * f[[j]] * cis((nu[m] - nu[j]) * N2)
+
+   # check recontruction
+  
   }
 
   m_max <- n_freq
 
   amp[1:m_max] <- 0
-  for (s in seq(m_max)) for (j in seq(s,m_max)) amp[s] <- amp[s] + A[j,j]*Conj(A[j,s])*FF[j]*cis((nu[j]-nu[s]) * N2)
+  for (m in seq(m_max)) for (j in seq(m)) amp[j] <- amp[j] + (S[m]) * (A[m, j]) * cis(nu[j] * N2)
 
   phase <- Arg(amp)
   amp <- Mod(amp)
