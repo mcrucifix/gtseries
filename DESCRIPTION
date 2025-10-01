@@ -2,7 +2,7 @@ Package: gtseries
 Encoding: UTF-8
 Type: Package
 Title: Time Series Analysis for Paleoclimate and Cyclostratigraphy Purposes
-Version: 1.5
+Version: 1.6
 Date: 2025-10-01
 Author: Michel Crucifix [aut, cre] (<https://orcid.org/0000-0002-3437-4911>)
 Maintainer: Michel Crucifix <michel.crucifix@uclouvain.be>
