@@ -32,7 +32,7 @@ haar <- function(x, q = 2, discarded_scales = 4) {
     tM2 <- apply(M2, 1, mean)
     abs(tM2 - tM1) * (2 * nn) / (2 * nn - 1)
   })
-  x <- 2^seq(nsteps)
+  x <- 2^(seq(nsteps)-1)
   y <- sapply(DT, function(x) mean(x^q))
   H <- data.frame(x = x, y = y, logx = log(x), logy = log(y))
   kept_scales <- seq(max(2, nsteps - discarded_scales))
