@@ -70,6 +70,6 @@ release:
         - name: "R package tarball"
           filepath: "*.tar.gz"
           link_type: package
-    artifacts:
-      paths:
-        - "*.tar.gz"
+  artifacts:
+    paths:
+      - "*.tar.gz"
