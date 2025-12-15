@@ -56,25 +56,15 @@ build-job:
 release:
   stage: release
   needs: ["build-job"]
+  name : "Release $CI_COMMIT_TAG"
   rules:
     - if: $CI_COMMIT_TAG
-  script:
-    - export TGZ_URL="${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/${JOB_ID}/artifacts/file/${TARNAME}"
-    - echo "the asset URL is :"${TGZ_URL}
-    - |
-      glab release create "${CI_COMMIT_REF_SLUG}" \
-      --name "gtseries Release ${CI_COMMIT_SHORT_SHA}" \
-      --notes "The built pakcage is availabel here: [Download ${TARNAME}](${TGZ_URL})" \
-      --assets-links "[{\"name\":\"${TARNAME}\",\"url\":\"${TGZ_URL}\",\"link_type\":\"other\"}]"
-  release:
-    tag_name: "$CI_COMMIT_TAG"
-    name: "Release $CI_COMMIT_TAG"
-    description: "Automated release of R package."
-    assets:
-      links:
-        - name: "R package tarball"
-          filepath: "*.tar.gz"
-          link_type: package
+  tag_name: "$CI_COMMIT_TAG"
+  description: "Automated release of R package."
+  links:
+     - name: "R package tarball"
+       filepath: "*.tar.gz"
+       link_type: package
   artifacts:
     paths:
       - "*.tar.gz"
