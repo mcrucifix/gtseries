@@ -57,13 +57,13 @@ build-job:
 release:
   stage: release
   needs: ["build-job"]
-  name : "Release $CI_COMMIT_TAG"
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - echo "The built package is being released"
   release:
     tag_name: "$CI_COMMIT_TAG"
+    name : "Release $CI_COMMIT_TAG"
     description: "Automated release of R package."
     assets:
       links:
