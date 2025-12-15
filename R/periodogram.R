@@ -93,6 +93,11 @@ periodogram_complex <- function(x){
 #' @export
 plot.periodogram <- function(x, ...) {
   args <- list(...)
+   # remove arguments we are explicitly setting
+  args$xlab <- NULL
+  args$ylab <- NULL
+  args$log  <- NULL
+  args$type <- NULL
   log   <- if (!is.null(args$log)) args$log else "xy"
   xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
   ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
@@ -117,6 +122,12 @@ plot.periodogram <- function(x, ...) {
 #' @export
 plot.periodogram_complex <- function(x, ...) {
   args <- list(...)
+   # remove arguments we are explicitly setting
+  args$xlab <- NULL
+  args$ylab <- NULL
+  args$log  <- NULL
+  args$type <- NULL
+
   log   <- if (!is.null(args$log)) args$log else "y"
   xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
   ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"

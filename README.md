@@ -1,7 +1,4 @@
-
-[![pipeline status](https://forge.uclouvain.be/mcrucifix/tseries/badges/master/pipeline.svg)](https://forge.uclouvain.be/mcrucifix/tseries/-/commits/master)
-
-[![Latest Release](https://forge.uclouvain.be/mcrucifix/tseries/-/badges/release.svg)](https://forge.uclouvain.be/mcrucifix/tseries/-/releases)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17246524.svg)](https://doi.org/10.5281/zenodo.17246524)
 
 
 
