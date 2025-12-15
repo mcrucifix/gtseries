@@ -44,8 +44,8 @@ build-job:
     paths:
      - "*.tar.gz"
      - artifacts_vars.env
-  reports:
-    dotenv: artifacts_vars.env
+    reports:
+      dotenv: artifacts_vars.env
 release:
   stage: release
   needs: ["build-job"]
