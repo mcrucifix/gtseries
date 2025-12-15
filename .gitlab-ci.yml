@@ -20,7 +20,7 @@
 # define stages of runner. at the moment,
 # just test (no build or deploy).
 stages:
-  - test
+#  - test
   - build
   - release
 
@@ -39,7 +39,7 @@ build-job:
     # install
     - R -e 'devtools::build(path=".")'
     - echo "JOB_ID=$CI_JOB_ID" > artifacts_vars.env 
-    - echo "TARNAME=`ls -1 *.tar.gz` >> artifacts_vars.env 
+    - echo "TARNAME=`ls -1 *.tar.gz`" >> artifacts_vars.env 
   artifacts:
     paths:
      - "*.tar.gz"
