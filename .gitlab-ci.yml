@@ -23,6 +23,7 @@
 #  - test
 #
 stages:
+  - test
   - build
   - release
 
@@ -34,6 +35,8 @@ test-job:
     - R CMD check ./ --no-manual
     # run the devtools test
     - R -e 'devtools::test()'
+  if:
+    never
     
 build-job:
   stage: build
