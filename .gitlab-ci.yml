@@ -36,7 +36,7 @@ test-job:
     # run the devtools test
     - R -e 'devtools::test()'
   when:
-    never
+    manual
     
 build-job:
   stage: build
