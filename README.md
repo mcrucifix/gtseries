@@ -4,6 +4,9 @@
 
 [![Latest Build](https://img.shields.io/badge/Download-gtseries_1.6%20Dev%20Build-blue?style=flat-square)](https://forge.uclouvain.be/mcrucifix/tseries/-/jobs/artifacts/master/raw/gtseries_1.6.tar.gz?job=build)
 
+[![Latest Release](https://forge.uclouvain.be/mcrucifix/tseries/-/badges/release.svg)](https://forge.uclouvain.be/mcrucifix/tseries/-/releases)
+
+
 ## gtseries
 
 Collection of time series analysis tools for R, focused on spectral decomposition
@@ -17,9 +20,6 @@ require(devtools)
 install_git("https://forge.uclouvain.be/mcrucifix/tseries.git")
 ```
 
-or download the latest relase at 
-
-https://stratus.elic.ucl.ac.be/users/crucifix/direct/gtseries_1.4.tar.gz
 
 
 Caution
