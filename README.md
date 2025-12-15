@@ -1,6 +1,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17246524.svg)](https://doi.org/10.5281/zenodo.17246524)
 
+[![Master Pipeline Status](https://forge.uclouvain.be/mcrucifix/gtseries/badges/master/pipeline.svg)](https://forge.uclouvain.be/mcrucifix/tseries/commits/master)
 
+[![Latest Build](https://img.shields.io/badge/Download-gtseries_1.6%20Dev%20Build-blue?style=flat-square)](https://forge.uclouvain.be/mcrucifix/tseries/-/jobs/artifacts/master/raw/gtseries_1.6.tar.gz?job=build)
 
 ## gtseries
 
