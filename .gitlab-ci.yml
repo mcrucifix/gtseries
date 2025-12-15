@@ -24,7 +24,6 @@ stages:
   - build
   - release
 
-
 # define test job
 test-job:
   stage: test
@@ -39,18 +38,26 @@ build-job:
   script:
     # install
     - R -e 'devtools::build(path=".")'
+    - echo "JOB_ID=$CI_JOB_ID" > artifacts_vars.env 
+    - echo "TARNAME=`ls -1 *.tar.gz` >> artifacts_vars.env 
   artifacts:
     paths:
      - "*.tar.gz"
+     - artifacts_vars.env
+  reports:
+    dotenv: artifacts_vars.env
 release:
   stage: release
-  image: registry.gitlab.com/gitlab-org/cli:latest
   needs: ["build-job"]
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - echo "Creating release for $CI_COMMIT_TAG"
-    - glab release create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG
+    - export TGZ_URL="${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/jobs/${JOB_ID}/artifacts/file/${TARNAME}"
+    - |
+      glab release create "${CI_COMMIT_REF_SLUG}" \
+        --name "gtseries Release ${CI_COMMIT_SHORT_SHA}" \
+        --notes "The built pakcage is availabel here: [Download ${TARNAME}](${TGZ_URL})" \
+        --assets-link "{\"name\":\"${TARNAME}\",\"url\":\"${TGZ_URL}\",\"link_type\":\"other\"}"
   release:
     tag_name: "$CI_COMMIT_TAG"
     name: "Release $CI_COMMIT_TAG"
