@@ -19,8 +19,10 @@
 
 # define stages of runner. at the moment,
 # just test (no build or deploy).
-stages:
+#
 #  - test
+#
+stages:
   - build
   - release
 
