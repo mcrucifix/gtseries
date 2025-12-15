@@ -35,7 +35,7 @@ test-job:
     - R CMD check ./ --no-manual
     # run the devtools test
     - R -e 'devtools::test()'
-  if:
+  when:
     never
     
 build-job:
