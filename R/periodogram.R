@@ -94,19 +94,14 @@ periodogram_complex <- function(x){
 plot.periodogram <- function(x, ...) {
   args <- list(...)
    # remove arguments we are explicitly setting
-  log   <- if (!is.null(args$log)) args$log else "xy"
-  xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
-  ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
-  type  <- if (!is.null(args$type)) args$type else "l"
+  args$log   <- if (!is.null(args$log)) args$log else "xy"
+  args$xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
+  args$ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
+  args$type  <- if (!is.null(args$type)) args$type else "l"
 
   args$x = x$Freq
   args$y = x$Power
  
-  args$xlab <- NULL
-  args$ylab <- NULL
-  args$log  <- NULL
-  args$type <- NULL
-
   do.call(plot, args)
 }
 
@@ -129,10 +124,10 @@ plot.periodogram_complex <- function(x, ...) {
   args <- list(...)
    # remove arguments we are explicitly setting
 
-  log   <- if (!is.null(args$log)) args$log else "y"
-  xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
-  ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
-  type  <- if (!is.null(args$type)) args$type else "l"
+  args$log   <- if (!is.null(args$log)) args$log else "y"
+  args$xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
+  args$ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
+  args$type  <- if (!is.null(args$type)) args$type else "l"
   
   args$x = x$Freq
   args$y = x$Power
