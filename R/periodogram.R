@@ -99,12 +99,15 @@ plot.periodogram <- function(x, ...) {
   ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
   type  <- if (!is.null(args$type)) args$type else "l"
 
+  args$x = x$Freq
+  args$y = x$Power
+ 
   args$xlab <- NULL
   args$ylab <- NULL
   args$log  <- NULL
   args$type <- NULL
 
-  plot(x$Freq, x$Power, type=type, log=log, xlab=xlab, ylab=ylab, args)
+  do.call(plot, args)
 }
 
 #' Plot a complex periodogram object
@@ -130,12 +133,10 @@ plot.periodogram_complex <- function(x, ...) {
   xlab  <- if (!is.null(args$xlab)) args$xlab else "Frequency"
   ylab  <- if (!is.null(args$ylab)) args$ylab else "Power density"
   type  <- if (!is.null(args$type)) args$type else "l"
-
-  args$xlab <- NULL
-  args$ylab <- NULL
-  args$log  <- NULL
-  args$type <- NULL
-
-  plot(x$Freq, x$Power, type=type, log=log, xlab=xlab, ylab=ylab, args)
+  
+  args$x = x$Freq
+  args$y = x$Power
+  
+  do.call(plot, args)
 }
 
